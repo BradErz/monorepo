@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package org.products.v1;
+
+option go_package = "github.com/BradErz/monorepo/gen/go/org/products/v1;productsv1";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/field_mask.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+
+service ProductsService {
+    rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
+    rpc CreateProduct(CreateProductRequest) returns (Product);
+    rpc UpdateProduct(UpdateProductRequest) returns (Product);
+    rpc GetProduct(GetProductRequest) returns (Product);
+}
+
+message GetProductRequest {
+    string id = 1;
+}
+
+message ListProductsRequest {
+    int32 page_size = 1;
+    string page_token = 3;
+    string filter = 4;
+    string order_by = 5;
+}
+
+message ListProductsResponse {
+    repeated Product products = 1;
+    string next_page_token = 2;
+}
+
+message Product {
+    string id = 1;
+    google.protobuf.Timestamp create_time = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+    google.protobuf.Timestamp update_time = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+    google.protobuf.Timestamp delete_time = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+    string name = 10;
+    string image_url = 11;
+}
+
+message CreateProductRequest {
+    Product product = 1 [(google.api.field_behavior) = REQUIRED]; 
+}
+
+message UpdateProductRequest {
+    Product product = 1 [(google.api.field_behavior) = REQUIRED];
+    google.protobuf.FieldMask field_mask = 2;
+}

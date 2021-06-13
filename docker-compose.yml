@@ -1,0 +1,72 @@
+version: '3'
+services:
+
+  reviews:
+    tty: true
+    platform: linux/amd64
+    build:
+      context: ./
+      dockerfile: ./services/reviews/Dockerfile
+      args:
+        PROJECT: ./services/reviews
+    environment:
+      - APP_NAME=reviews
+      - MONGODB_URI=mongodb://mongo:27017/
+      - TELEMETRY_ENABLED=true
+      - TELEMETRY_JAEGER_COLLECTOR_ENDPOINT=http://jaeger:14268/api/traces
+    ports:
+      - "8001:50051"
+    restart: on-failure
+    volumes:
+      - ./:/usr/src/app
+      - go-modules:/go/pkg/mod
+    networks:
+      - monorepo_net
+
+  products:
+    tty: true
+    platform: linux/amd64
+    build:
+      context: ./
+      dockerfile: ./services/products/Dockerfile
+      args:
+        PROJECT: ./services/products
+    environment:
+      - APP_NAME=products
+      - MONGODB_URI=mongodb://mongo:27017/
+      - TELEMETRY_ENABLED=true
+      - TELEMETRY_JAEGER_COLLECTOR_ENDPOINT=http://jaeger:14268/api/traces
+    ports:
+      - "8002:50051"
+    restart: on-failure
+    volumes:
+      - ./:/usr/src/app
+      - go-modules:/go/pkg/mod
+    networks:
+      - monorepo_net
+
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    networks:
+      - monorepo_net
+    command: --quiet --logpath /dev/null
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "6831:6831/udp"
+      - "16686:16686"
+      - "14268:14268"
+    networks:
+      - monorepo_net
+    command: --log-level=warn
+
+networks:
+  monorepo_net:
+    driver: bridge
+
+volumes:
+  go-modules:
