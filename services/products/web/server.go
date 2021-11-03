@@ -39,7 +39,7 @@ func Register(productsSrv productsv1.ProductsServiceServer) xgrpc.RegisterServer
 }
 
 func (srv *Server) GetProduct(ctx context.Context, req *productsv1.GetProductRequest) (*productsv1.Product, error) {
-	product, err := srv.service.GetProduct(ctx, &models.GetProductRequest{Name: req.GetName()})
+	product, err := srv.service.GetProduct(ctx, &models.GetProductRequest{Name: req.GetId()})
 	if err != nil {
 		return nil, err
 	}
@@ -83,9 +83,8 @@ func (srv *Server) UpdateProduct(ctx context.Context, req *productsv1.UpdateProd
 func toModelUpdateProductRequest(req *productsv1.UpdateProductRequest) *models.UpdateProductRequest {
 	return &models.UpdateProductRequest{
 		Product: &models.Product{
-			Name:        req.GetProduct().GetName(),
-			DisplayName: req.GetProduct().GetDisplayName(),
-			ImageURL:    req.GetProduct().GetImageUrl(),
+			Name:     req.GetProduct().GetName(),
+			ImageURL: req.GetProduct().GetImageUrl(),
 		},
 		Paths: req.FieldMask.GetPaths(),
 	}
@@ -93,9 +92,8 @@ func toModelUpdateProductRequest(req *productsv1.UpdateProductRequest) *models.U
 
 func toModelCreateProductRequest(req *productsv1.CreateProductRequest) *models.CreateProductRequest {
 	return &models.CreateProductRequest{
-		Name:        req.GetProduct().GetName(),
-		DisplayName: req.GetProduct().GetDisplayName(),
-		ImageURL:    req.GetProduct().GetImageUrl(),
+		Name:     req.GetProduct().GetName(),
+		ImageURL: req.GetProduct().GetImageUrl(),
 	}
 }
 
@@ -121,10 +119,9 @@ func toProtoListProductResponse(productResp *models.ListProductResponse) *produc
 
 func toProtoProduct(product *models.Product) *productsv1.Product {
 	p := &productsv1.Product{
-		Name:        product.Name,
-		CreateTime:  timestamppb.New(product.CreateTime),
-		DisplayName: product.DisplayName,
-		ImageUrl:    product.ImageURL,
+		Name:       product.Name,
+		CreateTime: timestamppb.New(product.CreateTime),
+		ImageUrl:   product.ImageURL,
 	}
 	if product.UpdateTime != nil {
 		p.UpdateTime = timestamppb.New(*product.UpdateTime)

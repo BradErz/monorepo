@@ -42,6 +42,3 @@ func New(dbName string, opts ...Option) (*Service, error) {
 		Client:   client,
 	}, nil
 }
-
-
-func ()

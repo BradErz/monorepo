@@ -84,8 +84,7 @@ func parseUpdateProductRequest(req *models.UpdateProductRequest) (bson.M, bson.M
 	updates := bson.M{}
 	for _, path := range req.Paths {
 		switch path {
-		case "display_name":
-			updates["display_name"] = req.Product.DisplayName
+
 		case "image_url":
 			updates["image_url"] = req.Product.ImageURL
 		}
@@ -96,9 +95,8 @@ func parseUpdateProductRequest(req *models.UpdateProductRequest) (bson.M, bson.M
 func newProductFromCreate(req *models.CreateProductRequest) *models.Product {
 	now := time.Now().UTC()
 	return &models.Product{
-		Name:        req.Name,
-		DisplayName: req.DisplayName,
-		ImageURL:    req.ImageURL,
-		CreateTime:  now,
+		Name:       req.Name,
+		ImageURL:   req.ImageURL,
+		CreateTime: now,
 	}
 }

@@ -3,9 +3,8 @@ package models
 import "time"
 
 type Product struct {
-	Name        string `json:"name,omitempty" bson:"name"`
-	DisplayName string `json:"display_name,omitempty" bson:"display_name"`
-	ImageURL    string `json:"image_url,omitempty" bson:"image_url"`
+	Name     string `json:"name,omitempty" bson:"name"`
+	ImageURL string `json:"image_url,omitempty" bson:"image_url"`
 
 	CreateTime time.Time  `json:"create_time" bson:"create_time"`
 	UpdateTime *time.Time `json:"update_time" bson:"update_time"`

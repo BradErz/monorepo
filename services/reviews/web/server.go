@@ -53,7 +53,6 @@ func (srv *Server) ListReviews(ctx context.Context, req *reviewsv1.ListReviewsRe
 
 func toModelListReviewReq(req *reviewsv1.ListReviewsRequest) *models.ListReviewsRequest {
 	return &models.ListReviewsRequest{
-		Parent:    req.GetParent(),
 		PageSize:  req.GetPageSize(),
 		PageToken: req.GetPageToken(),
 	}
@@ -61,7 +60,6 @@ func toModelListReviewReq(req *reviewsv1.ListReviewsRequest) *models.ListReviews
 
 func toModelCreateReviewReq(req *reviewsv1.CreateReviewRequest) *models.CreateReviewRequest {
 	return &models.CreateReviewRequest{
-		Name:  req.GetReview().GetName(),
 		Title: req.GetReview().GetTitle(),
 		Body:  req.GetReview().GetBody(),
 	}
@@ -81,7 +79,6 @@ func toProtoListReviewResponse(resp *models.ListReviewsResponse) *reviewsv1.List
 
 func toProtoReview(review *models.Review) *reviewsv1.Review {
 	r := &reviewsv1.Review{
-		Name:       review.Name,
 		CreateTime: timestamppb.New(review.CreateTime),
 		Title:      review.Title,
 		Body:       review.Body,

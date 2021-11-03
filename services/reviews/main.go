@@ -29,11 +29,11 @@ func app() error {
 	if err := telemetry.Init(lgr, telemetry.WithServiceName("reviews")); err != nil {
 		return fmt.Errorf("failed to setup telemetry: %w", err)
 	}
-	mc, err := xmongo.New("reviews-service")
+	mon, err := xmongo.New("reviews-service")
 	if err != nil {
 		return fmt.Errorf("failed to create mongoclient: %w", err)
 	}
-	store, err := storage.NewReviews(mc)
+	store, err := storage.NewReviews(mon.Database)
 	if err != nil {
 		return fmt.Errorf("failed to connect to mongodb: %w", err)
 	}
