@@ -1,6 +1,6 @@
 [submodule "third_party/api-common-protos"]
 	path = third_party/api-common-protos
 	url = https://github.com/googleapis/api-common-protos
-[submodule "third_party/googleapis"]
-	path = third_party/googleapis
-	url = git@github.com:googleapis/googleapis
+[submodule "third_party/protoc-gen-validate"]
+	path = third_party/protoc-gen-validate
+	url = https://github.com/envoyproxy/protoc-gen-validate
