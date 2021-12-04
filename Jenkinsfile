@@ -15,8 +15,7 @@ pipeline {
                     steps {
                         container("docker") {
                             sh """
-                            echo reviews
-                            docker version
+                            docker build -t reviews:${env.GIT_COMMIT} .
                             """
                         }
                     }
@@ -31,8 +30,7 @@ pipeline {
                     steps {
                         container("docker") {
                             sh """
-                            echo products
-                            docker version
+                            docker build -t products:${env.GIT_COMMIT} .
                             """
                         }
                     }
