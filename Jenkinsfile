@@ -1,34 +1,29 @@
-pipeline{
-    agent {
-        kubernetes {
-            yaml '''
-apiVersion: v1
-kind: Pod
-metadata:
-  labels:
-    some-label: some-label-value
-spec:
-  containers:
-    - name: maven
-      image: maven:alpine
-      command:
-        - cat
-      tty: true
-    - name: busybox
-      image: busybox
-      command:
-        - cat
-      tty: true
-            '''
-        }
-    }
-    stages{
-        stage("checkout"){
-            steps{
-                echo "========executing A========"
-                sh """
-                ls -la
-                """
+def components = ['products', 'reviews']
+
+pipeline {
+    agent none
+
+    stages {
+        stage ("build"){
+            parallel {
+                for (component in components) {
+                    stage ("buid ${component}") {
+                        agent {
+                            kubernetes {
+                                name "${component}-builder"
+                                yamlFile 'tools/did.yaml'
+                            }
+                        }
+                        steps {
+                            container("docker") {
+                                sh """
+                                echo ${component}
+                                docker version
+                                """
+                            }
+                        }
+                    }
+                }
             }
         }
     }
