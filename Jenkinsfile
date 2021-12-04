@@ -15,7 +15,11 @@ pipeline {
                     steps {
                         container("docker") {
                             sh """
-                            docker build -t reviews:${env.GIT_COMMIT} .
+                            docker build \
+                                -f ./services/reviews/Dockerfile \
+                                --build-arg ./services/reviews \
+                                -t reviews:${env.GIT_COMMIT} \                            
+                                .
                             """
                         }
                     }
@@ -30,7 +34,11 @@ pipeline {
                     steps {
                         container("docker") {
                             sh """
-                            docker build -t products:${env.GIT_COMMIT} .
+                            docker build \
+                                -f ./services/products/Dockerfile \
+                                --build-arg ./services/reviews \
+                                -t products:${env.GIT_COMMIT} \
+                                .
                             """
                         }
                     }
