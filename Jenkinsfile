@@ -6,21 +6,35 @@ pipeline {
     stages {
         stage ("build"){
             parallel {
-                for (component in components) {
-                    stage ("buid ${component}") {
-                        agent {
-                            kubernetes {
-                                name "${component}-builder"
-                                yamlFile 'tools/did.yaml'
-                            }
+                stage ("buid reviews") {
+                    agent {
+                        kubernetes {
+                            name "reviews-builder"
+                            yamlFile 'tools/did.yaml'
                         }
-                        steps {
-                            container("docker") {
-                                sh """
-                                echo ${component}
-                                docker version
-                                """
-                            }
+                    }
+                    steps {
+                        container("docker") {
+                            sh """
+                            echo reviews
+                            docker version
+                            """
+                        }
+                    }
+                }
+                stage ("buid products") {
+                    agent {
+                        kubernetes {
+                            name "products-builder"
+                            yamlFile 'tools/did.yaml'
+                        }
+                    }
+                    steps {
+                        container("docker") {
+                            sh """
+                            echo products
+                            docker version
+                            """
                         }
                     }
                 }
