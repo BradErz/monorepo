@@ -35,7 +35,7 @@ pipeline {
                             sh """
                             docker build \
                                 -f ./services/products/Dockerfile \
-                                --build-arg PROJECT=./services/reviews \
+                                --build-arg PROJECT=./services/products \
                                 -t products:${env.GIT_COMMIT} .
                             """
                         }
