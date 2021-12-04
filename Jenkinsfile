@@ -9,7 +9,7 @@ pipeline {
                 stage ("buid reviews") {
                     agent {
                         kubernetes {
-                            name "reviews-builder"
+                            label "reviews-builder"
                             yamlFile 'tools/did.yaml'
                         }
                     }
@@ -25,7 +25,7 @@ pipeline {
                 stage ("buid products") {
                     agent {
                         kubernetes {
-                            name "products-builder"
+                            label "products-builder"
                             yamlFile 'tools/did.yaml'
                         }
                     }
