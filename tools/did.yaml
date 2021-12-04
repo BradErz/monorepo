@@ -4,6 +4,9 @@ spec:
   containers:
   - name: docker
     image: docker:20
+    env:
+      - name: DOCKER_BUILDKIT
+        value: "1"
     command: ['cat']
     tty: true
     volumeMounts:
