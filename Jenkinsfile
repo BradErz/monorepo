@@ -17,7 +17,7 @@ pipeline {
                             sh """
                             docker build \
                                 -f ./services/reviews/Dockerfile \
-                                --build-arg ./services/reviews \
+                                --build-arg PROJECT=./services/reviews \
                                 -t reviews:${env.GIT_COMMIT} .
                             """
                         }
@@ -35,7 +35,7 @@ pipeline {
                             sh """
                             docker build \
                                 -f ./services/products/Dockerfile \
-                                --build-arg ./services/reviews \
+                                --build-arg PROJECT=./services/reviews \
                                 -t products:${env.GIT_COMMIT} .
                             """
                         }
