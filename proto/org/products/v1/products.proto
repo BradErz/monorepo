@@ -9,16 +9,21 @@ import "google/protobuf/field_mask.proto";
 import "google/api/client.proto";
 import "google/api/field_behavior.proto";
 import "google/api/resource.proto";
+import "validate/validate.proto";
 
 service ProductsService {
     rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
-    rpc CreateProduct(CreateProductRequest) returns (Product);
-    rpc UpdateProduct(UpdateProductRequest) returns (Product);
-    rpc GetProduct(GetProductRequest) returns (Product);
+    rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);
+    rpc UpdateProduct(UpdateProductRequest) returns (UpdateProductResponse);
+    rpc GetProduct(GetProductRequest) returns (GetProductResponse);
 }
 
 message GetProductRequest {
     string id = 1;
+}
+
+message GetProductResponse {
+    Product product = 1;
 }
 
 message ListProductsRequest {
@@ -33,21 +38,46 @@ message ListProductsResponse {
     string next_page_token = 2;
 }
 
-message Product {
-    string id = 1;
-    google.protobuf.Timestamp create_time = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
-    google.protobuf.Timestamp update_time = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
-    google.protobuf.Timestamp delete_time = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
-
-    string name = 10;
-    string image_url = 11;
+message CreateProductRequest {
+    string name = 1 [(validate.rules).string = {min_len: 5, max_len: 15}];
+    string image_url = 2;
+    string description = 3 [(validate.rules).string = {min_len: 5}];
+    float price = 4 [(validate.rules).float = {gte: 0}];
+    ProductCategory category = 5 [(validate.rules).enum = {not_in: [1]}];
 }
 
-message CreateProductRequest {
-    Product product = 1 [(google.api.field_behavior) = REQUIRED]; 
+message CreateProductResponse {
+    Product product = 1;
 }
 
 message UpdateProductRequest {
-    Product product = 1 [(google.api.field_behavior) = REQUIRED];
+    Product product = 1;
     google.protobuf.FieldMask field_mask = 2;
 }
+
+message UpdateProductResponse {
+    Product product = 1;
+
+}
+
+enum ProductCategory {
+    PRODUCT_UNKNOWN = 0;
+    SOFTWARE = 1;
+    BOOK = 2;
+    COURSE = 3;
+}
+
+message Product {
+    string id = 1;
+
+    google.protobuf.Timestamp create_time = 2;
+    google.protobuf.Timestamp update_time = 3;
+    google.protobuf.Timestamp delete_time = 4;
+
+    string name = 10;
+    string image_url = 11;
+    string description = 12;
+    float price = 13;
+    ProductCategory category = 14;
+}
+

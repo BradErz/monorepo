@@ -80,7 +80,9 @@ func app() error {
 		g.Add(func() error {
 			return grpcSrv.ListenAndServe()
 		}, func(err error) {
-			grpcSrv.Shutdown(err)
+			if err := grpcSrv.Shutdown(err); err != nil {
+				lgr.WithError(err).Error("failed to shutdown")
+			}
 		})
 	}
 

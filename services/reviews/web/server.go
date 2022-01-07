@@ -60,8 +60,8 @@ func toModelListReviewReq(req *reviewsv1.ListReviewsRequest) *models.ListReviews
 
 func toModelCreateReviewReq(req *reviewsv1.CreateReviewRequest) *models.CreateReviewRequest {
 	return &models.CreateReviewRequest{
-		Title: req.GetReview().GetTitle(),
-		Body:  req.GetReview().GetBody(),
+		Title: req.GetTitle(),
+		Body:  req.GetBody(),
 	}
 }
 

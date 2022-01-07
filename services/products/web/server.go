@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"google.golang.org/grpc"
@@ -38,12 +39,12 @@ func Register(productsSrv productsv1.ProductsServiceServer) xgrpc.RegisterServer
 	}
 }
 
-func (srv *Server) GetProduct(ctx context.Context, req *productsv1.GetProductRequest) (*productsv1.Product, error) {
-	product, err := srv.service.GetProduct(ctx, &models.GetProductRequest{Name: req.GetId()})
+func (srv *Server) GetProduct(ctx context.Context, req *productsv1.GetProductRequest) (*productsv1.GetProductResponse, error) {
+	product, err := srv.service.GetProduct(ctx, &models.GetProductRequest{ID: req.GetId()})
 	if err != nil {
 		return nil, err
 	}
-	return toProtoProduct(product), nil
+	return &productsv1.GetProductResponse{Product: toProtoProduct(product)}, nil
 }
 
 func (srv *Server) ListProducts(ctx context.Context, req *productsv1.ListProductsRequest) (*productsv1.ListProductsResponse, error) {
@@ -57,18 +58,22 @@ func (srv *Server) ListProducts(ctx context.Context, req *productsv1.ListProduct
 	return toProtoListProductResponse(listResp), nil
 }
 
-func (srv *Server) CreateProduct(ctx context.Context, req *productsv1.CreateProductRequest) (*productsv1.Product, error) {
+func (srv *Server) CreateProduct(ctx context.Context, req *productsv1.CreateProductRequest) (*productsv1.CreateProductResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
+
+	if err := req.Validate(); err != nil {
+		return nil, xerrors.Newf(xerrors.CodeInvalidArgument, err.Error())
+	}
 
 	product, err := srv.service.CreateProduct(ctx, toModelCreateProductRequest(req))
 	if err != nil {
 		return nil, err
 	}
-	return toProtoProduct(product), nil
+	return &productsv1.CreateProductResponse{Product: toProtoProduct(product)}, nil
 }
 
-func (srv *Server) UpdateProduct(ctx context.Context, req *productsv1.UpdateProductRequest) (*productsv1.Product, error) {
+func (srv *Server) UpdateProduct(ctx context.Context, req *productsv1.UpdateProductRequest) (*productsv1.UpdateProductResponse, error) {
 	if !req.GetFieldMask().IsValid(req.GetProduct()) {
 		return nil, xerrors.Newf(xerrors.CodeInvalidArgument, "specified paths in field_mask are invalid")
 	}
@@ -77,7 +82,7 @@ func (srv *Server) UpdateProduct(ctx context.Context, req *productsv1.UpdateProd
 		return nil, err
 	}
 
-	return toProtoProduct(product), nil
+	return &productsv1.UpdateProductResponse{Product: toProtoProduct(product)}, nil
 }
 
 func toModelUpdateProductRequest(req *productsv1.UpdateProductRequest) *models.UpdateProductRequest {
@@ -92,8 +97,11 @@ func toModelUpdateProductRequest(req *productsv1.UpdateProductRequest) *models.U
 
 func toModelCreateProductRequest(req *productsv1.CreateProductRequest) *models.CreateProductRequest {
 	return &models.CreateProductRequest{
-		Name:     req.GetProduct().GetName(),
-		ImageURL: req.GetProduct().GetImageUrl(),
+		Name:        req.GetName(),
+		ImageURL:    req.GetImageUrl(),
+		Description: req.GetDescription(),
+		Price:       req.GetPrice(),
+		Category:    models.ProductCategory(strings.ToLower(req.GetCategory().String())),
 	}
 }
 
@@ -119,9 +127,13 @@ func toProtoListProductResponse(productResp *models.ListProductResponse) *produc
 
 func toProtoProduct(product *models.Product) *productsv1.Product {
 	p := &productsv1.Product{
-		Name:       product.Name,
-		CreateTime: timestamppb.New(product.CreateTime),
-		ImageUrl:   product.ImageURL,
+		Id:          product.ID,
+		CreateTime:  timestamppb.New(product.CreateTime),
+		Name:        product.Name,
+		ImageUrl:    product.ImageURL,
+		Description: product.Description,
+		Price:       product.Price,
+		Category:    productsv1.ProductCategory(productsv1.ProductCategory_value[strings.ToUpper(string(product.Category))]),
 	}
 	if product.UpdateTime != nil {
 		p.UpdateTime = timestamppb.New(*product.UpdateTime)

@@ -8,6 +8,7 @@ import "google/protobuf/timestamp.proto";
 import "google/api/client.proto";
 import "google/api/field_behavior.proto";
 import "google/api/resource.proto";
+import "validate/validate.proto";
 
 service ReviewsService {
     rpc CreateReview(CreateReviewRequest) returns (Review);
@@ -15,9 +16,11 @@ service ReviewsService {
 }
 
 message CreateReviewRequest {
-    Review review = 1 [(google.api.field_behavior) = REQUIRED];
+    string product_id = 1;
+    string title = 2 [(validate.rules).string = {min_len: 5, max_len: 15}];
+    string body = 3;
+    uint32 rating = 4 [(validate.rules).uint32 = {gte:1, lte: 10}];
 }
-
 
 message ListReviewsRequest {
     string product_id = 1;
@@ -34,10 +37,11 @@ message Review {
     string id = 1;
     string product_id = 2;
 
-    google.protobuf.Timestamp create_time = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
-    google.protobuf.Timestamp update_time = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
-    google.protobuf.Timestamp delete_time = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+    google.protobuf.Timestamp create_time = 3;
+    google.protobuf.Timestamp update_time = 4;
+    google.protobuf.Timestamp delete_time = 5;
 
     string title = 10;
     string body = 11;
+    uint32 rating = 12;
 }

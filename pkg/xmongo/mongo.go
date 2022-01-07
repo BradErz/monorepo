@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo"
+
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -26,7 +28,11 @@ func New(dbName string, opts ...Option) (*Service, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(conf.MongoDBURI))
+	clientOpts := options.Client()
+	clientOpts.ApplyURI(conf.MongoDBURI)
+	clientOpts.SetMonitor(otelmongo.NewMonitor())
+
+	client, err := mongo.Connect(ctx, clientOpts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to mongodb: %w", err)
 	}

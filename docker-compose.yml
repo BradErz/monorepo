@@ -1,27 +1,28 @@
-version: '3'
 services:
 
-  reviews:
-    tty: true
-    platform: linux/amd64
-    build:
-      context: ./
-      dockerfile: ./services/reviews/Dockerfile
-      args:
-        PROJECT: ./services/reviews
-    environment:
-      - APP_NAME=reviews
-      - MONGODB_URI=mongodb://mongo:27017/
-      - TELEMETRY_ENABLED=true
-      - TELEMETRY_JAEGER_COLLECTOR_ENDPOINT=http://jaeger:14268/api/traces
-    ports:
-      - "8001:50051"
-    restart: on-failure
-    volumes:
-      - ./:/usr/src/app
-      - go-modules:/go/pkg/mod
-    networks:
-      - monorepo_net
+#  reviews:
+#    tty: true
+#    platform: linux/amd64
+#    build:
+#      context: ./
+#      dockerfile: ./services/reviews/Dockerfile
+#      args:
+#        PROJECT: ./services/reviews
+#    environment:
+#      - APP_NAME=reviews
+#      - MONGODB_URI=mongodb://mongo:27017/
+#      - TELEMETRY_ENABLED=true
+#      - TELEMETRY_JAEGER_COLLECTOR_ENDPOINT=http://jaeger:14268/api/traces
+#    ports:
+#      - "8001:50051"
+#    restart: on-failure
+#    volumes:
+#      - ./:/usr/src/app
+#      - go-modules:/go/pkg/mod
+#    networks:
+#      - monorepo_net
+#    depends_on:
+#      - mongo
 
   products:
     tty: true
@@ -44,9 +45,23 @@ services:
       - go-modules:/go/pkg/mod
     networks:
       - monorepo_net
+    depends_on:
+      - mongo
+
+  envoy:
+    tty: true
+    platform: linux/amd64
+    build:
+      context: ./
+      dockerfile: ./services/envoy/Dockerfile
+    ports:
+      - "8000:8080"
+    restart: on-failure
+    networks:
+      - monorepo_net
 
   mongo:
-    image: mongo
+    image: mongo:5
     restart: always
     ports:
       - "27017:27017"
@@ -56,13 +71,13 @@ services:
 
   jaeger:
     image: jaegertracing/all-in-one:latest
+    command: --log-level=warn
     ports:
       - "6831:6831/udp"
       - "16686:16686"
       - "14268:14268"
     networks:
       - monorepo_net
-    command: --log-level=warn
 
 networks:
   monorepo_net:

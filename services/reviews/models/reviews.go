@@ -3,23 +3,28 @@ package models
 import "time"
 
 type Review struct {
-	Name  string `json:"name,omitempty" bson:"name"`
-	Title string `json:"title,omitempty" bson:"title"`
-	Body  string `json:"body,omitempty" bson:"body"`
+	ID        string
+	ProductID string
+	Name      string
+	Title     string
+	Body      string
+	Rating    uint
 
-	CreateTime time.Time  `json:"create_time" bson:"create_time"`
-	UpdateTime *time.Time `json:"update_time" bson:"update_time"`
-	DeleteTime *time.Time `json:"delete_time" bson:"delete_time"`
+	CreateTime time.Time
+	UpdateTime *time.Time
+	DeleteTime *time.Time
 }
 
 type CreateReviewRequest struct {
-	Name  string
-	Title string
-	Body  string
+	ProductID string
+	Name      string
+	Title     string
+	Body      string
+	Rating    uint
 }
 
 type ListReviewsRequest struct {
-	Parent    string
+	ProductID string
 	PageSize  int32
 	PageToken string
 }
