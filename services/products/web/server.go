@@ -14,22 +14,25 @@ import (
 	"github.com/BradErz/monorepo/services/products/models"
 
 	productsv1 "github.com/BradErz/monorepo/gen/go/products/v1"
+	reviewsv1 "github.com/BradErz/monorepo/gen/go/reviews/v1"
 
 	"github.com/BradErz/monorepo/pkg/xgrpc"
 	"github.com/sirupsen/logrus"
 )
 
 type Server struct {
-	le      *logrus.Entry
-	service Service
+	le            *logrus.Entry
+	service       Service
+	reviewsClient reviewsv1.ReviewsServiceClient
 }
 
 var _ productsv1.ProductsServiceServer = (*Server)(nil)
 
-func New(le *logrus.Entry, service Service) (*Server, error) {
+func New(le *logrus.Entry, service Service, reviewsClient reviewsv1.ReviewsServiceClient) (*Server, error) {
 	return &Server{
-		le:      le,
-		service: service,
+		le:            le,
+		service:       service,
+		reviewsClient: reviewsClient,
 	}, nil
 }
 
@@ -45,6 +48,34 @@ func (srv *Server) GetProduct(ctx context.Context, req *productsv1.GetProductReq
 		return nil, err
 	}
 	return &productsv1.GetProductResponse{Product: toProtoProduct(product)}, nil
+}
+
+func (srv *Server) GetProductOverview(ctx context.Context, req *productsv1.GetProductOverviewRequest) (*productsv1.GetProductOverviewResponse, error) {
+	product, err := srv.service.GetProduct(ctx, &models.GetProductRequest{ID: req.GetProductId()})
+	if err != nil {
+		return nil, err
+	}
+
+	protoResp := &productsv1.GetProductOverviewResponse{
+		ProductOverview: &productsv1.ProductOverview{
+			Product: toProtoProduct(product),
+		},
+	}
+	srv.le.Infof("got paths: %s", req.GetFieldMask().GetPaths())
+
+	for _, v := range req.GetFieldMask().GetPaths() {
+		if v == "reviews" {
+			srv.le.Infof("path was a reviews")
+			listReviewReq := &reviewsv1.ListReviewsRequest{ProductId: req.GetProductId(), PageSize: 10}
+			reviewResp, err := srv.reviewsClient.ListReviews(ctx, listReviewReq)
+			if err != nil {
+				return nil, xerrors.Wrapf(xerrors.CodeInternal, err, "could not get reviews for %s", req.GetProductId())
+			}
+			protoResp.ProductOverview.Reviews = reviewResp.GetReviews()
+		}
+	}
+
+	return protoResp, nil
 }
 
 func (srv *Server) ListProducts(ctx context.Context, req *productsv1.ListProductsRequest) (*productsv1.ListProductsResponse, error) {

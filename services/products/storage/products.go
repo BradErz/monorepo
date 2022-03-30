@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -25,15 +26,19 @@ func NewProducts(md *mongo.Database) (*Products, error) {
 }
 
 func (p *Products) GetProduct(ctx context.Context, req *models.GetProductRequest) (*models.Product, error) {
-	filter := bson.M{"_id": req.ID}
-	product := &models.Product{}
+	id, err := primitive.ObjectIDFromHex(req.ID)
+	if err != nil {
+		return nil, xerrors.Newf(xerrors.CodeInvalidArgument, "%s is not a valid object id", req.ID)
+	}
+	filter := bson.M{"_id": id}
+	product := &product{}
 	if err := p.coll.FindOne(ctx, filter).Decode(&product); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, xerrors.Wrapf(xerrors.CodeNotFound, err, "product %s does not exist", req.ID)
 		}
 		return nil, xerrors.Wrapf(xerrors.CodeInternal, err, "failed to find product")
 	}
-	return product, nil
+	return toProduct(product), nil
 }
 
 func (p *Products) CreateProduct(ctx context.Context, req *models.CreateProductRequest) (*models.Product, error) {

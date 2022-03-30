@@ -8,12 +8,28 @@ import "google/api/client.proto";
 import "google/api/field_behavior.proto";
 import "google/api/resource.proto";
 import "validate/validate.proto";
+import "reviews/v1/reviews.proto";
 
 service ProductsService {
     rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
     rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);
     rpc UpdateProduct(UpdateProductRequest) returns (UpdateProductResponse);
     rpc GetProduct(GetProductRequest) returns (GetProductResponse);
+    rpc GetProductOverview(GetProductOverviewRequest) returns (GetProductOverviewResponse);
+}
+
+message GetProductOverviewRequest {
+    string product_id = 1;
+    google.protobuf.FieldMask field_mask = 2;
+}
+
+message GetProductOverviewResponse {
+    ProductOverview product_overview = 1;
+}
+
+message ProductOverview {
+    Product product = 1;
+    repeated reviews.v1.Review reviews = 2;
 }
 
 message GetProductRequest {

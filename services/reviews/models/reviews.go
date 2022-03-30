@@ -3,9 +3,8 @@ package models
 import "time"
 
 type Review struct {
-	ID        string
-	ProductID string
-	Name      string
+	ID        string `bson:"_id"`
+	ProductID string `bson:"product_id"`
 	Title     string
 	Body      string
 	Rating    uint

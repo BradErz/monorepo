@@ -55,7 +55,7 @@ func app() error {
 	if err != nil {
 		return fmt.Errorf("failed to create product: %w", err)
 	}
-	lgr.Infof("got resp %+v", resp.GetProduct())
+	lgr.Infof("got resp from creating product: %+v", resp.GetProduct())
 
 	createReviewReq := &reviewsv1.CreateReviewRequest{
 		ProductId: resp.GetProduct().GetId(),
@@ -69,7 +69,7 @@ func app() error {
 		return fmt.Errorf("failed to create review for %s: %w", createReviewReq.GetProductId(), err)
 	}
 
-	lgr.Infof("got resp from creating review: %+v", createReviewResp.GetReview().GetBody())
+	lgr.Infof("got resp from creating review: %+v", createReviewResp.GetReview())
 	return nil
 }
 

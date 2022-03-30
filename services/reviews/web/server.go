@@ -53,6 +53,7 @@ func (srv *Server) ListReviews(ctx context.Context, req *reviewsv1.ListReviewsRe
 
 func toModelListReviewReq(req *reviewsv1.ListReviewsRequest) *models.ListReviewsRequest {
 	return &models.ListReviewsRequest{
+		ProductID: req.GetProductId(),
 		PageSize:  req.GetPageSize(),
 		PageToken: req.GetPageToken(),
 	}
@@ -60,8 +61,10 @@ func toModelListReviewReq(req *reviewsv1.ListReviewsRequest) *models.ListReviews
 
 func toModelCreateReviewReq(req *reviewsv1.CreateReviewRequest) *models.CreateReviewRequest {
 	return &models.CreateReviewRequest{
-		Title: req.GetTitle(),
-		Body:  req.GetBody(),
+		ProductID: req.GetProductId(),
+		Title:     req.GetTitle(),
+		Body:      req.GetBody(),
+		Rating:    uint(req.GetRating()),
 	}
 }
 
@@ -79,9 +82,12 @@ func toProtoListReviewResponse(resp *models.ListReviewsResponse) *reviewsv1.List
 
 func toProtoReview(review *models.Review) *reviewsv1.Review {
 	r := &reviewsv1.Review{
+		Id:         review.ID,
+		ProductId:  review.ProductID,
 		CreateTime: timestamppb.New(review.CreateTime),
 		Title:      review.Title,
 		Body:       review.Body,
+		Rating:     uint32(review.Rating),
 	}
 	if review.UpdateTime != nil {
 		r.UpdateTime = timestamppb.New(*review.UpdateTime)

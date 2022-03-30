@@ -6,6 +6,7 @@ import (
 
 	"github.com/BradErz/monorepo/pkg/xerrors"
 	"github.com/BradErz/monorepo/services/reviews/models"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -33,7 +34,7 @@ func (p *Reviews) CreateReview(ctx context.Context, req *models.CreateReviewRequ
 }
 
 func (p *Reviews) ListReviews(ctx context.Context, req *models.ListReviewsRequest) (*models.ListReviewsResponse, error) {
-	cur, err := p.coll.Find(ctx, bson.M{})
+	cur, err := p.coll.Find(ctx, bson.M{"product_id": req.ProductID})
 	if err != nil {
 		return nil, xerrors.Wrapf(xerrors.CodeInternal, err, "failed to list products")
 	}
@@ -50,9 +51,11 @@ func (p *Reviews) ListReviews(ctx context.Context, req *models.ListReviewsReques
 func newReviewFromCreate(req *models.CreateReviewRequest) *models.Review {
 	now := time.Now().UTC()
 	return &models.Review{
-		Name:       req.Name,
+		ID:         uuid.NewString(),
+		ProductID:  req.ProductID,
 		CreateTime: now,
 		Title:      req.Title,
 		Body:       req.Body,
+		Rating:     req.Rating,
 	}
 }

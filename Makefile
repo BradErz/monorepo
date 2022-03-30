@@ -6,7 +6,7 @@ buf: buf-mod-update
 
 build:
 	COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 \
-		docker compose up --build --remove-orphans
+		docker-compose up --build --remove-orphans --force-recreate
 
 install-tools:
 	go install github.com/envoyproxy/protoc-gen-validate@latest

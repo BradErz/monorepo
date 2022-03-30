@@ -8,8 +8,11 @@ import (
 	"syscall"
 	"time"
 
+	reviewsv1 "github.com/BradErz/monorepo/gen/go/reviews/v1"
 	"github.com/BradErz/monorepo/pkg/telemetry"
 	"github.com/oklog/run"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"google.golang.org/grpc"
 
 	"github.com/BradErz/monorepo/pkg/xgrpc"
 
@@ -45,9 +48,19 @@ func app() error {
 	if err != nil {
 		return fmt.Errorf("failed to connect to mongodb: %w", err)
 	}
+	grpcOpts := []grpc.DialOption{
+		grpc.WithInsecure(),
+		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
+		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
+	}
+	reviewsConn, err := grpc.Dial("reviews:50051", grpcOpts...)
+	if err != nil {
+		return fmt.Errorf("failed to dial to reviews service: %w", err)
+	}
+	reviewsClient := reviewsv1.NewReviewsServiceClient(reviewsConn)
 
 	svc := service.NewProducts(store)
-	productsSrv, err := web.New(lgr, svc)
+	productsSrv, err := web.New(lgr, svc, reviewsClient)
 	if err != nil {
 		return fmt.Errorf("failed to listen on port: %w", err)
 	}
