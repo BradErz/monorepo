@@ -1,8 +1,6 @@
 syntax = "proto3";
 
-package org.products.v1;
-
-option go_package = "github.com/BradErz/monorepo/gen/go/org/products/v1;productsv1";
+package products.v1;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/field_mask.proto";

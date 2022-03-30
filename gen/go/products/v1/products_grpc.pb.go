@@ -38,7 +38,7 @@ func NewProductsServiceClient(cc grpc.ClientConnInterface) ProductsServiceClient
 
 func (c *productsServiceClient) ListProducts(ctx context.Context, in *ListProductsRequest, opts ...grpc.CallOption) (*ListProductsResponse, error) {
 	out := new(ListProductsResponse)
-	err := c.cc.Invoke(ctx, "/org.products.v1.ProductsService/ListProducts", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/products.v1.ProductsService/ListProducts", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (c *productsServiceClient) ListProducts(ctx context.Context, in *ListProduc
 
 func (c *productsServiceClient) CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*CreateProductResponse, error) {
 	out := new(CreateProductResponse)
-	err := c.cc.Invoke(ctx, "/org.products.v1.ProductsService/CreateProduct", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/products.v1.ProductsService/CreateProduct", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (c *productsServiceClient) CreateProduct(ctx context.Context, in *CreatePro
 
 func (c *productsServiceClient) UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*UpdateProductResponse, error) {
 	out := new(UpdateProductResponse)
-	err := c.cc.Invoke(ctx, "/org.products.v1.ProductsService/UpdateProduct", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/products.v1.ProductsService/UpdateProduct", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (c *productsServiceClient) UpdateProduct(ctx context.Context, in *UpdatePro
 
 func (c *productsServiceClient) GetProduct(ctx context.Context, in *GetProductRequest, opts ...grpc.CallOption) (*GetProductResponse, error) {
 	out := new(GetProductResponse)
-	err := c.cc.Invoke(ctx, "/org.products.v1.ProductsService/GetProduct", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/products.v1.ProductsService/GetProduct", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func _ProductsService_ListProducts_Handler(srv interface{}, ctx context.Context,
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/org.products.v1.ProductsService/ListProducts",
+		FullMethod: "/products.v1.ProductsService/ListProducts",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ProductsServiceServer).ListProducts(ctx, req.(*ListProductsRequest))
@@ -138,7 +138,7 @@ func _ProductsService_CreateProduct_Handler(srv interface{}, ctx context.Context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/org.products.v1.ProductsService/CreateProduct",
+		FullMethod: "/products.v1.ProductsService/CreateProduct",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ProductsServiceServer).CreateProduct(ctx, req.(*CreateProductRequest))
@@ -156,7 +156,7 @@ func _ProductsService_UpdateProduct_Handler(srv interface{}, ctx context.Context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/org.products.v1.ProductsService/UpdateProduct",
+		FullMethod: "/products.v1.ProductsService/UpdateProduct",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ProductsServiceServer).UpdateProduct(ctx, req.(*UpdateProductRequest))
@@ -174,7 +174,7 @@ func _ProductsService_GetProduct_Handler(srv interface{}, ctx context.Context, d
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/org.products.v1.ProductsService/GetProduct",
+		FullMethod: "/products.v1.ProductsService/GetProduct",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ProductsServiceServer).GetProduct(ctx, req.(*GetProductRequest))
@@ -186,7 +186,7 @@ func _ProductsService_GetProduct_Handler(srv interface{}, ctx context.Context, d
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var ProductsService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "org.products.v1.ProductsService",
+	ServiceName: "products.v1.ProductsService",
 	HandlerType: (*ProductsServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

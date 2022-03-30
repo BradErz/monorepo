@@ -13,7 +13,7 @@ import (
 
 	"github.com/BradErz/monorepo/services/products/models"
 
-	productsv1 "github.com/BradErz/monorepo/gen/go/org/products/v1"
+	productsv1 "github.com/BradErz/monorepo/gen/go/products/v1"
 
 	"github.com/BradErz/monorepo/pkg/xgrpc"
 	"github.com/sirupsen/logrus"

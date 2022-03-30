@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -33,6 +34,8 @@ func app() error {
 	if err != nil {
 		return fmt.Errorf("failed to create mongoclient: %w", err)
 	}
+	defer mon.Stop(context.Background())
+
 	store, err := storage.NewReviews(mon.Database)
 	if err != nil {
 		return fmt.Errorf("failed to connect to mongodb: %w", err)

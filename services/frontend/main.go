@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	productsv1 "github.com/BradErz/monorepo/gen/go/org/products/v1"
+	productsv1 "github.com/BradErz/monorepo/gen/go/products/v1"
 
 	"github.com/BradErz/monorepo/pkg/telemetry"
 	"github.com/sirupsen/logrus"

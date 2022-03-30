@@ -11,7 +11,7 @@ import (
 
 	"github.com/BradErz/monorepo/services/reviews/models"
 
-	reviewsv1 "github.com/BradErz/monorepo/gen/go/org/reviews/v1"
+	reviewsv1 "github.com/BradErz/monorepo/gen/go/reviews/v1"
 	"github.com/sirupsen/logrus"
 )
 

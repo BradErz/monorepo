@@ -1,8 +1,8 @@
-buf:
-	buf generate proto/
+buf-mod-update:
+	buf mod update proto
 
-submodules:
-	git submodule update --init --recursive
+buf: buf-mod-update
+	buf generate proto/
 
 build:
 	COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 \

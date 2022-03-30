@@ -1,8 +1,6 @@
 syntax = "proto3";
 
-package org.reviews.v1;
-
-option go_package = "github.com/BradErz/monorepo/gen/go/org/reviews/v1;reviewsv1";
+package reviews.v1;
 
 import "google/protobuf/timestamp.proto";
 import "google/api/client.proto";

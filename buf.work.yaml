@@ -6,5 +6,3 @@
 version: v1
 directories:
   - proto
-  - third_party/api-common-protos
-  - third_party/protoc-gen-validate

@@ -36,7 +36,7 @@ func NewReviewsServiceClient(cc grpc.ClientConnInterface) ReviewsServiceClient {
 
 func (c *reviewsServiceClient) CreateReview(ctx context.Context, in *CreateReviewRequest, opts ...grpc.CallOption) (*Review, error) {
 	out := new(Review)
-	err := c.cc.Invoke(ctx, "/org.reviews.v1.ReviewsService/CreateReview", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/reviews.v1.ReviewsService/CreateReview", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (c *reviewsServiceClient) CreateReview(ctx context.Context, in *CreateRevie
 
 func (c *reviewsServiceClient) ListReviews(ctx context.Context, in *ListReviewsRequest, opts ...grpc.CallOption) (*ListReviewsResponse, error) {
 	out := new(ListReviewsResponse)
-	err := c.cc.Invoke(ctx, "/org.reviews.v1.ReviewsService/ListReviews", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/reviews.v1.ReviewsService/ListReviews", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func _ReviewsService_CreateReview_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/org.reviews.v1.ReviewsService/CreateReview",
+		FullMethod: "/reviews.v1.ReviewsService/CreateReview",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ReviewsServiceServer).CreateReview(ctx, req.(*CreateReviewRequest))
@@ -110,7 +110,7 @@ func _ReviewsService_ListReviews_Handler(srv interface{}, ctx context.Context, d
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/org.reviews.v1.ReviewsService/ListReviews",
+		FullMethod: "/reviews.v1.ReviewsService/ListReviews",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ReviewsServiceServer).ListReviews(ctx, req.(*ListReviewsRequest))
@@ -122,7 +122,7 @@ func _ReviewsService_ListReviews_Handler(srv interface{}, ctx context.Context, d
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var ReviewsService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "org.reviews.v1.ReviewsService",
+	ServiceName: "reviews.v1.ReviewsService",
 	HandlerType: (*ReviewsServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
