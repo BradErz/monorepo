@@ -11,8 +11,7 @@ const (
 	ProductCourse   ProductCategory = "course"
 )
 
-type Price struct {
-}
+type Price struct{}
 
 type Product struct {
 	ID          string

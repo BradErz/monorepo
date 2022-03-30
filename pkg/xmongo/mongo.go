@@ -48,3 +48,7 @@ func New(dbName string, opts ...Option) (*Service, error) {
 		Client:   client,
 	}, nil
 }
+
+func (svc *Service) Stop(ctx context.Context) error {
+	return svc.Client.Disconnect(ctx)
+}

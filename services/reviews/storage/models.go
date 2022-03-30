@@ -1,4 +1,3 @@
 package storage
 
-type Review struct {
-}
+type Review struct{}

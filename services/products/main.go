@@ -39,6 +39,8 @@ func app() error {
 	if err != nil {
 		return fmt.Errorf("failed to create mongoclient: %w", err)
 	}
+	defer mon.Stop(context.Background())
+
 	store, err := storage.NewProducts(mon.Database)
 	if err != nil {
 		return fmt.Errorf("failed to connect to mongodb: %w", err)
@@ -70,7 +72,6 @@ func app() error {
 			case <-ctx.Done():
 				return ctx.Err()
 			}
-
 		}, func(e error) {
 			cancel()
 		})
