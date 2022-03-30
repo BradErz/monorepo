@@ -16,6 +16,7 @@ import (
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 type Server struct {
@@ -54,6 +55,8 @@ func NewServer(le *logrus.Entry, opts ...ServerOption) (*Server, error) {
 	for _, registerFunc := range conf.registerFuncs {
 		registerFunc(grpcSrv)
 	}
+
+	reflection.Register(grpcSrv)
 
 	return &Server{
 		le:         le,

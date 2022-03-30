@@ -22,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ReviewsServiceClient interface {
-	CreateReview(ctx context.Context, in *CreateReviewRequest, opts ...grpc.CallOption) (*Review, error)
+	CreateReview(ctx context.Context, in *CreateReviewRequest, opts ...grpc.CallOption) (*CreateReviewResponse, error)
 	ListReviews(ctx context.Context, in *ListReviewsRequest, opts ...grpc.CallOption) (*ListReviewsResponse, error)
 }
 
@@ -34,8 +34,8 @@ func NewReviewsServiceClient(cc grpc.ClientConnInterface) ReviewsServiceClient {
 	return &reviewsServiceClient{cc}
 }
 
-func (c *reviewsServiceClient) CreateReview(ctx context.Context, in *CreateReviewRequest, opts ...grpc.CallOption) (*Review, error) {
-	out := new(Review)
+func (c *reviewsServiceClient) CreateReview(ctx context.Context, in *CreateReviewRequest, opts ...grpc.CallOption) (*CreateReviewResponse, error) {
+	out := new(CreateReviewResponse)
 	err := c.cc.Invoke(ctx, "/reviews.v1.ReviewsService/CreateReview", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func (c *reviewsServiceClient) ListReviews(ctx context.Context, in *ListReviewsR
 // All implementations should embed UnimplementedReviewsServiceServer
 // for forward compatibility
 type ReviewsServiceServer interface {
-	CreateReview(context.Context, *CreateReviewRequest) (*Review, error)
+	CreateReview(context.Context, *CreateReviewRequest) (*CreateReviewResponse, error)
 	ListReviews(context.Context, *ListReviewsRequest) (*ListReviewsResponse, error)
 }
 
@@ -64,7 +64,7 @@ type ReviewsServiceServer interface {
 type UnimplementedReviewsServiceServer struct {
 }
 
-func (UnimplementedReviewsServiceServer) CreateReview(context.Context, *CreateReviewRequest) (*Review, error) {
+func (UnimplementedReviewsServiceServer) CreateReview(context.Context, *CreateReviewRequest) (*CreateReviewResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateReview not implemented")
 }
 func (UnimplementedReviewsServiceServer) ListReviews(context.Context, *ListReviewsRequest) (*ListReviewsResponse, error) {

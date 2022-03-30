@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	productsv1 "github.com/BradErz/monorepo/gen/go/products/v1"
+	reviewsv1 "github.com/BradErz/monorepo/gen/go/reviews/v1"
 
 	"github.com/BradErz/monorepo/pkg/telemetry"
 	"github.com/sirupsen/logrus"
@@ -33,9 +34,16 @@ func app() error {
 
 	productConn, err := grpc.Dial("localhost:8002", grpcOpts...)
 	if err != nil {
+		return fmt.Errorf("failed to dial to products service: %w", err)
+	}
+	reviewsConn, err := grpc.Dial("localhost:8001", grpcOpts...)
+	if err != nil {
 		return fmt.Errorf("failed to dial to reviews service: %w", err)
 	}
-	prodClient := productsv1.NewProductsServiceClient(productConn)
+
+	productsClient := productsv1.NewProductsServiceClient(productConn)
+	reviewsClient := reviewsv1.NewReviewsServiceClient(reviewsConn)
+
 	req := &productsv1.CreateProductRequest{
 		Name:        "my amazing",
 		ImageUrl:    "https://amazing.life/image.png",
@@ -43,11 +51,25 @@ func app() error {
 		Price:       9.99,
 		Category:    productsv1.ProductCategory_BOOK,
 	}
-	resp, err := prodClient.CreateProduct(context.Background(), req)
+	resp, err := productsClient.CreateProduct(context.Background(), req)
 	if err != nil {
 		return fmt.Errorf("failed to create product: %w", err)
 	}
 	lgr.Infof("got resp %+v", resp.GetProduct())
+
+	createReviewReq := &reviewsv1.CreateReviewRequest{
+		ProductId: resp.GetProduct().GetId(),
+		Title:     "this is my amazing review",
+		Body:      "this product really is a life saver i do not know what i would do without it",
+		Rating:    5,
+	}
+
+	createReviewResp, err := reviewsClient.CreateReview(context.Background(), createReviewReq)
+	if err != nil {
+		return fmt.Errorf("failed to create review for %s: %w", createReviewReq.GetProductId(), err)
+	}
+
+	lgr.Infof("got resp from creating review: %+v", createReviewResp.GetReview().GetBody())
 	return nil
 }
 

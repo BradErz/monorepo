@@ -35,12 +35,12 @@ func Register(reviewSrv reviewsv1.ReviewsServiceServer) xgrpc.RegisterServerFunc
 	}
 }
 
-func (srv *Server) CreateReview(ctx context.Context, req *reviewsv1.CreateReviewRequest) (*reviewsv1.Review, error) {
+func (srv *Server) CreateReview(ctx context.Context, req *reviewsv1.CreateReviewRequest) (*reviewsv1.CreateReviewResponse, error) {
 	resp, err := srv.service.CreateReview(ctx, toModelCreateReviewReq(req))
 	if err != nil {
 		return nil, err
 	}
-	return toProtoReview(resp), nil
+	return &reviewsv1.CreateReviewResponse{Review: toProtoReview(resp)}, nil
 }
 
 func (srv *Server) ListReviews(ctx context.Context, req *reviewsv1.ListReviewsRequest) (*reviewsv1.ListReviewsResponse, error) {
