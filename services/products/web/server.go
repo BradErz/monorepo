@@ -86,6 +86,7 @@ func (srv *Server) ListProducts(ctx context.Context, req *productsv1.ListProduct
 	if err != nil {
 		return nil, err
 	}
+
 	return toProtoListProductResponse(listResp), nil
 }
 

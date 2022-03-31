@@ -14,6 +14,15 @@ import (
 	"google.golang.org/grpc"
 )
 
+var AllCodes = map[xerrors.Code]codes.Code{
+	xerrors.CodeUnknown:         codes.Unknown,
+	xerrors.CodeNotFound:        codes.NotFound,
+	xerrors.CodeInvalidArgument: codes.InvalidArgument,
+	xerrors.CodeAlreadyExists:   codes.AlreadyExists,
+	xerrors.CodeUnauthenticated: codes.Unauthenticated,
+	xerrors.CodeInternal:        codes.Internal,
+}
+
 func ErrorMapping(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	resp, err := handler(ctx, req)
 	return resp, mapCodes(err)
@@ -29,21 +38,11 @@ func mapCodes(err error) error {
 		return err
 	}
 
-	var c codes.Code
-	switch myError.Code() {
-	case xerrors.CodeNotFound:
-		c = codes.NotFound
-	case xerrors.CodeInvalidArgument:
-		c = codes.InvalidArgument
-	case xerrors.CodeAlreadyExists:
-		c = codes.AlreadyExists
-	case xerrors.CodeUnauthenticated:
-		c = codes.Unauthenticated
-	case xerrors.CodeInternal:
-		c = codes.Internal
-	default:
+	c, ok := AllCodes[myError.Code()]
+	if !ok {
 		c = codes.Unknown
 	}
+
 	st := status.New(c, myError.Msg())
 	if myError.Details() != nil {
 		st, _ = st.WithDetails(&errdetails.ErrorInfo{

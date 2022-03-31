@@ -61,7 +61,7 @@ func (p *Products) ListProducts(ctx context.Context, req *models.ListProductRequ
 	}
 	var prods []*product
 	if err := cur.All(ctx, &prods); err != nil {
-		return nil, xerrors.Wrapf(xerrors.CodeInternal, err, "failed to unmarshal products")
+		return nil, xerrors.Wrapf(xerrors.CodeInternal, err, "failed to unmarshal products: %v", req)
 	}
 	return &models.ListProductResponse{
 		Products:      toProducts(prods),

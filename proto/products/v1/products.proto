@@ -15,6 +15,7 @@ service ProductsService {
     rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);
     rpc UpdateProduct(UpdateProductRequest) returns (UpdateProductResponse);
     rpc GetProduct(GetProductRequest) returns (GetProductResponse);
+
     rpc GetProductOverview(GetProductOverviewRequest) returns (GetProductOverviewResponse);
 }
 
