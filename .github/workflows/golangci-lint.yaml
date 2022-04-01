@@ -1,0 +1,28 @@
+name: golangci-lint
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read # Required for `only-new-issues` option.
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  golangci:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.18'
+
+      - uses: actions/checkout@v2
+
+      - uses: golangci/golangci-lint-action@v3
+        with:
+          args: --out-${NO_FUTURE}format colored-line-number --verbose
+          only-new-issues: true
