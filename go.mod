@@ -3,7 +3,7 @@ module github.com/BradErz/monorepo
 go 1.18
 
 require (
-	github.com/envoyproxy/protoc-gen-validate v0.1.0
+	github.com/envoyproxy/protoc-gen-validate v0.6.7
 	github.com/go-logr/logr v1.2.3
 	github.com/go-logr/zapr v1.2.3
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
