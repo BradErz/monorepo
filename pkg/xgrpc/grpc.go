@@ -9,10 +9,7 @@ import (
 
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 
-	"github.com/BradErz/monorepo/pkg/xerrors"
-
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"google.golang.org/grpc"
@@ -26,10 +23,7 @@ type Server struct {
 }
 
 func NewServer(lgr logr.Logger, opts ...ServerOption) (*Server, error) {
-	conf, err := getServerConfig(opts...)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get serverConfig: %w", err)
-	}
+	conf := getServerConfig(opts...)
 
 	// define some standard options we want to use
 	grpcOpts := []grpc.ServerOption{
@@ -107,19 +101,18 @@ func (srv *Server) Shutdown(err error) error {
 	return nil
 }
 
-// exampleAuthFunc is used by a middleware to authenticate requests
-func exampleAuthFunc(ctx context.Context) (context.Context, error) {
-	token, err := grpc_auth.AuthFromMD(ctx, "bearer")
-	if err != nil {
-		return nil, err
-	}
-
-	if token != "ciccio" {
-		return nil, xerrors.Newf(xerrors.CodeUnauthenticated, "invalid auth token: %v", err)
-	}
-
-	return context.WithValue(ctx, "token", token), nil
-}
+// func exampleAuthFunc(ctx context.Context) (context.Context, error) {
+//	token, err := grpc_auth.AuthFromMD(ctx, "bearer")
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	if token != "ciccio" {
+//		return nil, xerrors.Newf(xerrors.CodeUnauthenticated, "invalid auth token: %v", err)
+//	}
+//
+//	return context.WithValue(ctx, "token", token), nil
+// }
 
 type TokenAuth struct {
 	Token string

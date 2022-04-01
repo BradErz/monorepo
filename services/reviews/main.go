@@ -32,16 +32,17 @@ func app() error {
 		return fmt.Errorf("failed to create xlogger: %w", err)
 	}
 
-	if _, err := telemetry.Init(lgr, telemetry.WithServiceName("reviews")); err != nil {
-		return fmt.Errorf("failed to setup telemetry: %w", err)
+	if _, e := telemetry.Init(lgr, telemetry.WithServiceName("reviews")); e != nil {
+		return fmt.Errorf("failed to setup telemetry: %w", e)
 	}
 
 	mon, err := xmongo.New(lgr, "reviews-service")
 	if err != nil {
 		return fmt.Errorf("failed to create mongoclient: %w", err)
 	}
-	defer mon.Stop(context.Background())
-
+	defer func() {
+		_ = mon.Stop(context.Background())
+	}()
 	store := storage.NewReviews(mon.Database)
 
 	svc := service.NewReviews(store)

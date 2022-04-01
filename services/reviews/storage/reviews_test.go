@@ -18,11 +18,9 @@ func TestListReviews(t *testing.T) {
 		defer clear()
 		store := NewReviews(md.Database)
 		revs := getReviews(9)
-		var actualReviews []*models.Review
 		for _, rev := range revs {
-			actualReview, err := store.CreateReview(context.Background(), rev)
+			_, err := store.CreateReview(context.Background(), rev)
 			require.NoError(t, err)
-			actualReviews = append(actualReviews, actualReview)
 		}
 
 		nextPageToken := ""

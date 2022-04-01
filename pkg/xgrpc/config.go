@@ -42,11 +42,11 @@ func WithRegisterFunc(fn RegisterServerFunc) ServerOption {
 	}
 }
 
-func getServerConfig(opts ...ServerOption) (*serverConfig, error) {
+func getServerConfig(opts ...ServerOption) *serverConfig {
 	conf := &serverConfig{}
 	for _, opt := range opts {
 		opt(conf)
 	}
 
-	return conf, nil
+	return conf
 }

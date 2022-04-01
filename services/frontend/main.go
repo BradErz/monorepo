@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	"google.golang.org/grpc/credentials/insecure"
+
 	"github.com/BradErz/monorepo/pkg/xlogger"
 
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
@@ -35,7 +37,7 @@ func app() error {
 	}
 
 	grpcOpts := []grpc.DialOption{
-		grpc.WithInsecure(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
 		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -41,15 +42,17 @@ func app() error {
 		return fmt.Errorf("failed to create xlogger: %w", err)
 	}
 
-	if _, err := telemetry.Init(lgr, telemetry.WithServiceName("products")); err != nil {
-		return fmt.Errorf("failed to setup telemetry: %w", err)
+	if _, e := telemetry.Init(lgr, telemetry.WithServiceName("products")); e != nil {
+		return fmt.Errorf("failed to setup telemetry: %w", e)
 	}
 
 	mon, err := xmongo.New(lgr, "products-service")
 	if err != nil {
 		return fmt.Errorf("failed to create mongoclient: %w", err)
 	}
-	defer mon.Stop(context.Background())
+	defer func() {
+		_ = mon.Stop(context.Background())
+	}()
 
 	store := storage.NewProducts(mon.Database)
 
@@ -99,14 +102,14 @@ func app() error {
 		g.Add(func() error {
 			return grpcSrv.ListenAndServe()
 		}, func(err error) {
-			if err := grpcSrv.Shutdown(err); err != nil {
-				lgr.Error(err, "failed to shutdown")
+			if e := grpcSrv.Shutdown(err); e != nil {
+				lgr.Error(e, "failed to shutdown")
 			}
 		})
 	}
 
 	err = g.Run()
-	if err == context.Canceled {
+	if errors.Is(err, context.Canceled) {
 		return nil
 	}
 
