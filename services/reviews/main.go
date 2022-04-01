@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/BradErz/monorepo/pkg/xlogger"
@@ -17,12 +18,11 @@ import (
 
 	"github.com/BradErz/monorepo/services/reviews/service"
 	"github.com/BradErz/monorepo/services/reviews/web"
-	"github.com/sirupsen/logrus"
 )
 
 func main() {
 	if err := app(); err != nil {
-		logrus.WithError(err).Fatal("failed to start application")
+		log.Fatalf("failed to start application: %s", err)
 	}
 }
 

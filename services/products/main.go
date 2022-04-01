@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -26,12 +27,11 @@ import (
 
 	"github.com/BradErz/monorepo/services/products/service"
 	"github.com/BradErz/monorepo/services/products/web"
-	"github.com/sirupsen/logrus"
 )
 
 func main() {
 	if err := app(); err != nil {
-		logrus.WithError(err).Fatal("failed to start application")
+		log.Fatalf("failed to start application: %s", err)
 	}
 }
 
