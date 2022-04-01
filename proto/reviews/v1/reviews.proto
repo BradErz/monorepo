@@ -2,9 +2,6 @@ syntax = "proto3";
 
 package reviews.v1;
 
-import "google/api/client.proto";
-import "google/api/field_behavior.proto";
-import "google/api/resource.proto";
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
