@@ -51,7 +51,15 @@ func (p *Reviews) ListReviews(ctx context.Context, req *models.ListReviewsReques
 		Reviews: toReviews(reviews),
 	}
 
-	if len(reviews) != 0 {
+	// If we have no reviews from the database we have no next page token
+	// AND
+	// if the amount of the reviews we get back is equal to the page size then we might have more reviews.
+	//
+	// maybe instead we should always do a +1 on the page size and return that ID as the actual "next" page token
+	// because then if someone requests 1 page of 10 docs, but we only have 10 docs currently we will still give a
+	// next page token of the 10th document due to the "$gt" in the filter which means they will query again but get an
+	// empty page.
+	if len(reviews) != 0 && len(reviews) == int(req.PageSize) {
 		resp.NextPageToken = reviews[len(reviews)-1].ID.Hex()
 	}
 
