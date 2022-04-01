@@ -3,10 +3,12 @@ package telemetry
 import (
 	"fmt"
 
+	"github.com/go-logr/logr"
+
+	"go.opentelemetry.io/otel/trace"
+
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/sdk/resource"
-
-	"github.com/sirupsen/logrus"
 
 	"go.opentelemetry.io/otel/exporters/jaeger"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
@@ -17,23 +19,24 @@ import (
 )
 
 // Init configures an OpenTelemetry exporter and trace provider
-func Init(le *logrus.Entry, opts ...Option) error {
+func Init(lgr logr.Logger, opts ...Option) (trace.Tracer, error) {
+	lgr = lgr.WithName("telemetry")
 	conf, err := getConfig(opts...)
 	if err != nil {
-		return fmt.Errorf("telemetry: failed to load config: %w", err)
+		return nil, fmt.Errorf("telemetry: failed to load config: %w", err)
 	}
 
 	if !conf.Enabled {
-		le.Infof("telemetry is disabled")
-		return nil
+		lgr.Info("telemetry is disabled")
+		return nil, nil
 	}
-	le.Infof("telemetry is enabled! Sending traces to: %s", conf.JaegerCollectorEndpoint)
+	lgr.Info("telemetry is enabled", "endpoint", conf.JaegerCollectorEndpoint)
 
 	exp, err := jaeger.New(
 		jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(conf.JaegerCollectorEndpoint)),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to create jaeger exporter: %w", err)
+		return nil, fmt.Errorf("failed to create jaeger exporter: %w", err)
 	}
 	tp := tracesdk.NewTracerProvider(
 		tracesdk.WithSampler(tracesdk.AlwaysSample()),
@@ -46,5 +49,5 @@ func Init(le *logrus.Entry, opts ...Option) error {
 	)
 	otel.SetTracerProvider(tp)
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
-	return nil
+	return tp.Tracer(""), nil
 }

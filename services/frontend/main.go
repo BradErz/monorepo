@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
+
 	productsv1 "github.com/BradErz/monorepo/gen/go/products/v1"
 	reviewsv1 "github.com/BradErz/monorepo/gen/go/reviews/v1"
 
@@ -22,7 +24,8 @@ func main() {
 func app() error {
 	lgr := logrus.NewEntry(logrus.New())
 
-	if err := telemetry.Init(lgr, telemetry.WithServiceName("frontend"), telemetry.WithEnabled()); err != nil {
+	tracer, err := telemetry.Init(lgr, telemetry.WithServiceName("frontend"), telemetry.WithEnabled())
+	if err != nil {
 		return fmt.Errorf("failed to setup telemetry: %w", err)
 	}
 
@@ -44,14 +47,19 @@ func app() error {
 	productsClient := productsv1.NewProductsServiceClient(productConn)
 	reviewsClient := reviewsv1.NewReviewsServiceClient(reviewsConn)
 
+	ctx := context.Background()
+
+	ctx, span := tracer.Start(ctx, "hello-span")
+	defer span.End()
+
 	req := &productsv1.CreateProductRequest{
 		Name:        "my amazing",
 		ImageUrl:    "https://amazing.life/image.png",
 		Description: "this really is an amazing product you would not imagine",
 		Price:       9.99,
-		Category:    productsv1.ProductCategory_BOOK,
+		Category:    productsv1.ProductCategory_PRODUCT_CATEGORY_BOOK,
 	}
-	resp, err := productsClient.CreateProduct(context.Background(), req)
+	resp, err := productsClient.CreateProduct(ctx, req)
 	if err != nil {
 		return fmt.Errorf("failed to create product: %w", err)
 	}
@@ -64,12 +72,21 @@ func app() error {
 		Rating:    5,
 	}
 
-	createReviewResp, err := reviewsClient.CreateReview(context.Background(), createReviewReq)
+	createReviewResp, err := reviewsClient.CreateReview(ctx, createReviewReq)
 	if err != nil {
 		return fmt.Errorf("failed to create review for %s: %w", createReviewReq.GetProductId(), err)
 	}
 
 	lgr.Infof("got resp from creating review: %+v", createReviewResp.GetReview())
+
+	overviewReq := &productsv1.GetProductOverviewRequest{ProductId: createReviewReq.GetProductId(), FieldMask: &fieldmaskpb.FieldMask{Paths: []string{"reviews"}}}
+	overviewResp, err := productsClient.GetProductOverview(ctx, overviewReq)
+	if err != nil {
+		return fmt.Errorf("failed to create review for %s: %w", createReviewReq.GetProductId(), err)
+	}
+
+	lgr.Infof("got resp from overview review: %+v", overviewResp.GetProductOverview())
+
 	return nil
 }
 

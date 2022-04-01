@@ -1,26 +1,17 @@
 package xlogger
 
 import (
-	"context"
-
+	"github.com/go-logr/logr"
+	"github.com/go-logr/zapr"
 	"go.uber.org/zap"
 )
 
-var defaultLogger *Logger
-
-type Logger struct {
-	Logger *zap.SugaredLogger
-}
-
-func New() *Logger {
-	logger, _ := zap.NewProduction()
-	sugar := logger.Sugar()
-	defaultLogger = &Logger{
-		Logger: sugar,
+func New() (logr.Logger, error) {
+	zc := zap.NewProductionConfig()
+	zc.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
+	z, err := zc.Build()
+	if err != nil {
+		return logr.Logger{}, err
 	}
-	return defaultLogger
-}
-
-func (l *Logger) Debugf(ctx context.Context) *Logger {
-	return l
+	return zapr.NewLogger(z), nil
 }

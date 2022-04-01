@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-logr/logr"
+
 	"google.golang.org/grpc"
 
 	"github.com/BradErz/monorepo/pkg/xerrors"
@@ -17,20 +19,19 @@ import (
 	reviewsv1 "github.com/BradErz/monorepo/gen/go/reviews/v1"
 
 	"github.com/BradErz/monorepo/pkg/xgrpc"
-	"github.com/sirupsen/logrus"
 )
 
 type Server struct {
-	le            *logrus.Entry
+	lgr           logr.Logger
 	service       Service
 	reviewsClient reviewsv1.ReviewsServiceClient
 }
 
 var _ productsv1.ProductsServiceServer = (*Server)(nil)
 
-func New(le *logrus.Entry, service Service, reviewsClient reviewsv1.ReviewsServiceClient) (*Server, error) {
+func New(lgr logr.Logger, service Service, reviewsClient reviewsv1.ReviewsServiceClient) (*Server, error) {
 	return &Server{
-		le:            le,
+		lgr:           lgr,
 		service:       service,
 		reviewsClient: reviewsClient,
 	}, nil
@@ -61,11 +62,10 @@ func (srv *Server) GetProductOverview(ctx context.Context, req *productsv1.GetPr
 			Product: toProtoProduct(product),
 		},
 	}
-	srv.le.Infof("got paths: %s", req.GetFieldMask().GetPaths())
 
 	for _, v := range req.GetFieldMask().GetPaths() {
 		if v == "reviews" {
-			srv.le.Infof("path was a reviews")
+			srv.lgr.Info("path was a reviews")
 			listReviewReq := &reviewsv1.ListReviewsRequest{ProductId: req.GetProductId(), PageSize: 10}
 			reviewResp, err := srv.reviewsClient.ListReviews(ctx, listReviewReq)
 			if err != nil {

@@ -56,3 +56,7 @@ func (e *Error) Msg() string {
 func (e *Error) Details() map[string]string {
 	return e.details
 }
+
+func NotValidObjectID(id string) error {
+	return Newf(CodeInvalidArgument, "%s is not a valid object id", id)
+}

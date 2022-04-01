@@ -2,7 +2,15 @@ buf-mod-update:
 	buf mod update proto
 
 buf: buf-mod-update
+	buf format -w .
 	buf generate proto/
+
+format:
+	gofumpt -w .
+	buf format -w .
+
+lint:
+	golangci-lint run ./...
 
 build:
 	COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 \

@@ -3,6 +3,10 @@ package web
 import (
 	"context"
 
+	"github.com/BradErz/monorepo/pkg/xerrors"
+
+	"github.com/go-logr/logr"
+
 	"google.golang.org/grpc"
 
 	"github.com/BradErz/monorepo/pkg/xgrpc"
@@ -12,19 +16,18 @@ import (
 	"github.com/BradErz/monorepo/services/reviews/models"
 
 	reviewsv1 "github.com/BradErz/monorepo/gen/go/reviews/v1"
-	"github.com/sirupsen/logrus"
 )
 
 type Server struct {
-	le      *logrus.Entry
+	lgr     logr.Logger
 	service Service
 }
 
 var _ reviewsv1.ReviewsServiceServer = (*Server)(nil)
 
-func New(le *logrus.Entry, service Service) (*Server, error) {
+func New(lgr logr.Logger, service Service) (*Server, error) {
 	return &Server{
-		le:      le,
+		lgr:     lgr.WithName("reviewsv1"),
 		service: service,
 	}, nil
 }
@@ -36,10 +39,16 @@ func Register(reviewSrv reviewsv1.ReviewsServiceServer) xgrpc.RegisterServerFunc
 }
 
 func (srv *Server) CreateReview(ctx context.Context, req *reviewsv1.CreateReviewRequest) (*reviewsv1.CreateReviewResponse, error) {
+	if err := req.ValidateAll(); err != nil {
+		srv.lgr.Error(err, "request was not valid")
+		return nil, xerrors.Wrapf(xerrors.CodeInvalidArgument, err, "request was invalid: %s", err.Error())
+	}
+
 	resp, err := srv.service.CreateReview(ctx, toModelCreateReviewReq(req))
 	if err != nil {
 		return nil, err
 	}
+
 	return &reviewsv1.CreateReviewResponse{Review: toProtoReview(resp)}, nil
 }
 

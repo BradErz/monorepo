@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/go-logr/logr"
+
 	"go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo"
 
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -15,11 +17,12 @@ import (
 )
 
 type Service struct {
+	lgr      logr.Logger
 	Client   *mongo.Client
 	Database *mongo.Database
 }
 
-func New(dbName string, opts ...Option) (*Service, error) {
+func New(lgr logr.Logger, dbName string, opts ...Option) (*Service, error) {
 	conf, err := getConfig(opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load config for mongodb: %w", err)
@@ -44,11 +47,13 @@ func New(dbName string, opts ...Option) (*Service, error) {
 	}
 
 	return &Service{
-		Database: client.Database(dbName),
+		lgr:      lgr.WithName("xmongo"),
 		Client:   client,
+		Database: client.Database(dbName),
 	}, nil
 }
 
 func (svc *Service) Stop(ctx context.Context) error {
+	svc.lgr.Info("disconnecting from the database")
 	return svc.Client.Disconnect(ctx)
 }

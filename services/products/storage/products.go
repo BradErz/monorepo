@@ -19,16 +19,16 @@ type Products struct {
 	coll *mongo.Collection
 }
 
-func NewProducts(md *mongo.Database) (*Products, error) {
+func NewProducts(md *mongo.Database) *Products {
 	return &Products{
 		coll: md.Collection("products"),
-	}, nil
+	}
 }
 
 func (p *Products) GetProduct(ctx context.Context, req *models.GetProductRequest) (*models.Product, error) {
 	id, err := primitive.ObjectIDFromHex(req.ID)
 	if err != nil {
-		return nil, xerrors.Newf(xerrors.CodeInvalidArgument, "%s is not a valid object id", req.ID)
+		return nil, xerrors.NotValidObjectID(req.ID)
 	}
 	filter := bson.M{"_id": id}
 	product := &product{}

@@ -15,7 +15,6 @@ service ProductsService {
   rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);
   rpc UpdateProduct(UpdateProductRequest) returns (UpdateProductResponse);
   rpc GetProduct(GetProductRequest) returns (GetProductResponse);
-
   rpc GetProductOverview(GetProductOverviewRequest) returns (GetProductOverviewResponse);
 }
 
@@ -86,10 +85,10 @@ message UpdateProductResponse {
 }
 
 enum ProductCategory {
-  PRODUCT_UNKNOWN = 0;
-  SOFTWARE = 1;
-  BOOK = 2;
-  COURSE = 3;
+  PRODUCT_CATEGORY_UNSPECIFIED = 0;
+  PRODUCT_CATEGORY_SOFTWARE = 1;
+  PRODUCT_CATEGORY_BOOK = 2;
+  PRODUCT_CATEGORY_COURSE = 3;
 }
 
 message Product {

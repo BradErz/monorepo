@@ -2,12 +2,9 @@ package storage
 
 import (
 	"context"
-	"time"
 
 	"github.com/BradErz/monorepo/pkg/xerrors"
 	"github.com/BradErz/monorepo/services/reviews/models"
-	"github.com/google/uuid"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -15,47 +12,48 @@ type Reviews struct {
 	coll *mongo.Collection
 }
 
-func NewReviews(md *mongo.Database) (*Reviews, error) {
+func NewReviews(md *mongo.Database) *Reviews {
 	return &Reviews{
 		coll: md.Collection("reviews"),
-	}, nil
+	}
 }
 
 func (p *Reviews) CreateReview(ctx context.Context, req *models.CreateReviewRequest) (*models.Review, error) {
-	product := newReviewFromCreate(req)
-	if _, err := p.coll.InsertOne(ctx, product); err != nil {
-		if mongo.IsDuplicateKeyError(err) {
-			return nil, xerrors.Wrapf(xerrors.CodeAlreadyExists, err, "name %s already exists", req.Name)
-		}
-		return nil, xerrors.Wrapf(xerrors.CodeInternal, err, "failed to create product")
+	review, err := fromCreateReviewRequest(req)
+	if err != nil {
+		return nil, err
 	}
 
-	return product, nil
+	if _, err := p.coll.InsertOne(ctx, review); err != nil {
+		return nil, xerrors.Wrapf(xerrors.CodeInternal, err, "failed to create review")
+	}
+
+	return toReview(review), nil
 }
 
 func (p *Reviews) ListReviews(ctx context.Context, req *models.ListReviewsRequest) (*models.ListReviewsResponse, error) {
-	cur, err := p.coll.Find(ctx, bson.M{"product_id": req.ProductID})
+	filter, opts, err := fromListReviewsRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	cur, err := p.coll.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, xerrors.Wrapf(xerrors.CodeInternal, err, "failed to list products")
 	}
-	var products []*models.Review
-	if err := cur.All(ctx, &products); err != nil {
+
+	var reviews []*review
+	if err := cur.All(ctx, &reviews); err != nil {
 		return nil, xerrors.Wrapf(xerrors.CodeInternal, err, "failed to unmarshal products")
 	}
-	return &models.ListReviewsResponse{
-		Reviews:       products,
-		NextPageToken: "111",
-	}, nil
-}
 
-func newReviewFromCreate(req *models.CreateReviewRequest) *models.Review {
-	now := time.Now().UTC()
-	return &models.Review{
-		ID:         uuid.NewString(),
-		ProductID:  req.ProductID,
-		CreateTime: now,
-		Title:      req.Title,
-		Body:       req.Body,
-		Rating:     req.Rating,
+	resp := &models.ListReviewsResponse{
+		Reviews: toReviews(reviews),
 	}
+
+	if len(reviews) != 0 {
+		resp.NextPageToken = reviews[len(reviews)-1].ID.Hex()
+	}
+
+	return resp, nil
 }

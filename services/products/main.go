@@ -8,6 +8,10 @@ import (
 	"syscall"
 	"time"
 
+	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/BradErz/monorepo/pkg/xlogger"
+
 	reviewsv1 "github.com/BradErz/monorepo/gen/go/reviews/v1"
 	"github.com/BradErz/monorepo/pkg/telemetry"
 	"github.com/oklog/run"
@@ -32,24 +36,25 @@ func main() {
 }
 
 func app() error {
-	lgr := logrus.NewEntry(logrus.New())
+	lgr, err := xlogger.New()
+	if err != nil {
+		return fmt.Errorf("failed to create xlogger: %w", err)
+	}
 
-	if err := telemetry.Init(lgr, telemetry.WithServiceName("products")); err != nil {
+	if _, err := telemetry.Init(lgr, telemetry.WithServiceName("products")); err != nil {
 		return fmt.Errorf("failed to setup telemetry: %w", err)
 	}
 
-	mon, err := xmongo.New("products-service")
+	mon, err := xmongo.New(lgr, "products-service")
 	if err != nil {
 		return fmt.Errorf("failed to create mongoclient: %w", err)
 	}
 	defer mon.Stop(context.Background())
 
-	store, err := storage.NewProducts(mon.Database)
-	if err != nil {
-		return fmt.Errorf("failed to connect to mongodb: %w", err)
-	}
+	store := storage.NewProducts(mon.Database)
+
 	grpcOpts := []grpc.DialOption{
-		grpc.WithInsecure(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
 		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
 	}
@@ -95,7 +100,7 @@ func app() error {
 			return grpcSrv.ListenAndServe()
 		}, func(err error) {
 			if err := grpcSrv.Shutdown(err); err != nil {
-				lgr.WithError(err).Error("failed to shutdown")
+				lgr.Error(err, "failed to shutdown")
 			}
 		})
 	}

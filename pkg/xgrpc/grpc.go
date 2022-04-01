@@ -5,27 +5,27 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/go-logr/logr"
+
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 
 	"github.com/BradErz/monorepo/pkg/xerrors"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
-	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
 type Server struct {
-	le         *logrus.Entry
+	lgr        logr.Logger
 	conf       *serverConfig
 	grpcServer *grpc.Server
 }
 
-func NewServer(le *logrus.Entry, opts ...ServerOption) (*Server, error) {
+func NewServer(lgr logr.Logger, opts ...ServerOption) (*Server, error) {
 	conf, err := getServerConfig(opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get serverConfig: %w", err)
@@ -37,12 +37,12 @@ func NewServer(le *logrus.Entry, opts ...ServerOption) (*Server, error) {
 			otelgrpc.StreamServerInterceptor(),
 			grpc_recovery.StreamServerInterceptor(),
 			grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
-			grpc_logrus.StreamServerInterceptor(le),
+			// grpc_logrus.StreamServerInterceptor(lgr),
 		)),
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			otelgrpc.UnaryServerInterceptor(),
 			grpc_ctxtags.UnaryServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
-			grpc_logrus.UnaryServerInterceptor(le),
+			// grpc_logrus.UnaryServerInterceptor(lgr),
 			grpc_recovery.UnaryServerInterceptor(),
 			ErrorMapping,
 		)),
@@ -59,7 +59,7 @@ func NewServer(le *logrus.Entry, opts ...ServerOption) (*Server, error) {
 	reflection.Register(grpcSrv)
 
 	return &Server{
-		le:         le,
+		lgr:        lgr.WithName("xgrpcserver"),
 		grpcServer: grpcSrv,
 		conf:       conf,
 	}, nil
@@ -73,15 +73,15 @@ func (srv *Server) ListenAndServe() error {
 		}
 		srv.conf.listener = lis
 	}
-	srv.le.Infof("starting grpc server on %s", srv.conf.listener.Addr())
+	srv.lgr.Info("starting grpc server", "addr", srv.conf.listener.Addr())
 	return srv.grpcServer.Serve(srv.conf.listener)
 }
 
 func (srv *Server) Shutdown(err error) error {
-	srv.le.Info("grpc server: shutting down")
+	srv.lgr.Info("grpc server: shutting down")
 	if srv.conf.gracePeriod == 0 {
 		srv.grpcServer.Stop()
-		srv.le.Info("grpc server: shutdown  without grace period")
+		srv.lgr.Info("grpc server: shutdown  without grace period")
 		return nil
 	}
 
@@ -90,7 +90,7 @@ func (srv *Server) Shutdown(err error) error {
 
 	stopped := make(chan struct{})
 	go func() {
-		srv.le.Infof("grpc server: waiting for grace period %s", srv.conf.gracePeriod)
+		srv.lgr.Info("waiting before stopping", "period", srv.conf.gracePeriod)
 		srv.grpcServer.GracefulStop()
 		close(stopped)
 	}()
@@ -103,7 +103,7 @@ func (srv *Server) Shutdown(err error) error {
 		cancel()
 	}
 
-	srv.le.Info("grpc server: sucessfully shutdown")
+	srv.lgr.Info("successfully shutdown")
 	return nil
 }
 
@@ -125,7 +125,7 @@ type TokenAuth struct {
 	Token string
 }
 
-// Return value is mapped to request headers.
+// GetRequestMetadata Return value is mapped to request headers.
 func (t TokenAuth) GetRequestMetadata(ctx context.Context, in ...string) (map[string]string, error) {
 	return map[string]string{
 		"authentication": fmt.Sprintf("bearer %s", t.Token),

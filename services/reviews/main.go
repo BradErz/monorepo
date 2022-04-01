@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/BradErz/monorepo/pkg/xlogger"
+
 	"github.com/BradErz/monorepo/pkg/telemetry"
 
 	"github.com/BradErz/monorepo/pkg/xgrpc"
@@ -25,21 +27,22 @@ func main() {
 }
 
 func app() error {
-	lgr := logrus.NewEntry(logrus.New())
+	lgr, err := xlogger.New()
+	if err != nil {
+		return fmt.Errorf("failed to create xlogger: %w", err)
+	}
 
-	if err := telemetry.Init(lgr, telemetry.WithServiceName("reviews")); err != nil {
+	if _, err := telemetry.Init(lgr, telemetry.WithServiceName("reviews")); err != nil {
 		return fmt.Errorf("failed to setup telemetry: %w", err)
 	}
-	mon, err := xmongo.New("reviews-service")
+
+	mon, err := xmongo.New(lgr, "reviews-service")
 	if err != nil {
 		return fmt.Errorf("failed to create mongoclient: %w", err)
 	}
 	defer mon.Stop(context.Background())
 
-	store, err := storage.NewReviews(mon.Database)
-	if err != nil {
-		return fmt.Errorf("failed to connect to mongodb: %w", err)
-	}
+	store := storage.NewReviews(mon.Database)
 
 	svc := service.NewReviews(store)
 	reviewsSrv, err := web.New(lgr, svc)
