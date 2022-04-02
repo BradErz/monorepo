@@ -21,3 +21,7 @@ install-tools:
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.26
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
 	go install mvdan.cc/gofumpt@latest
+
+grpcui:
+	buf build --as-file-descriptor-set -o ./proto.bin
+	grpcui -protoset ./proto.bin -plaintext localhost:10000

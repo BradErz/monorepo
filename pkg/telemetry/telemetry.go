@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	"go.opentelemetry.io/contrib/propagators/b3"
 
 	"go.opentelemetry.io/otel/trace"
 
@@ -48,6 +49,11 @@ func Init(lgr logr.Logger, opts ...Option) (trace.Tracer, error) {
 		)),
 	)
 	otel.SetTracerProvider(tp)
-	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
+		propagation.TraceContext{},
+		propagation.Baggage{},
+		b3.New(),
+	))
 	return tp.Tracer(""), nil
 }
