@@ -94,9 +94,9 @@ func (srv *Server) CreateProduct(ctx context.Context, req *productsv1.CreateProd
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
-	if err := req.Validate(); err != nil {
-		return nil, xerrors.Newf(xerrors.CodeInvalidArgument, err.Error())
-	}
+	//if err := req.Validate(); err != nil {
+	//	return nil, xerrors.Newf(xerrors.CodeInvalidArgument, err.Error())
+	//}
 
 	product, err := srv.service.CreateProduct(ctx, toModelCreateProductRequest(req))
 	if err != nil {

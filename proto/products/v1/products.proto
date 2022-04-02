@@ -5,7 +5,6 @@ package products.v1;
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "reviews/v1/reviews.proto";
-import "validate/validate.proto";
 
 service ProductsService {
   rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
@@ -50,22 +49,11 @@ message ListProductsResponse {
 }
 
 message CreateProductRequest {
-  string name = 1 [(validate.rules).string = {
-    min_len: 5,
-    max_len: 15
-  }];
+  string name = 1;
   string image_url = 2;
-  string description = 3 [(validate.rules).string = {
-    min_len: 5
-  }];
-  float price = 4 [(validate.rules).float = {
-    gte: 0
-  }];
-  ProductCategory category = 5 [(validate.rules).enum = {
-    not_in: [
-      1
-    ]
-  }];
+  string description = 3;
+  float price = 4;
+  ProductCategory category = 5;
 }
 
 message CreateProductResponse {

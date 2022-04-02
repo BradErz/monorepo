@@ -3,8 +3,6 @@ package web
 import (
 	"context"
 
-	"github.com/BradErz/monorepo/pkg/xerrors"
-
 	"github.com/go-logr/logr"
 
 	"google.golang.org/grpc"
@@ -39,10 +37,10 @@ func Register(reviewSrv reviewsv1.ReviewsServiceServer) xgrpc.RegisterServerFunc
 }
 
 func (srv *Server) CreateReview(ctx context.Context, req *reviewsv1.CreateReviewRequest) (*reviewsv1.CreateReviewResponse, error) {
-	if err := req.ValidateAll(); err != nil {
-		srv.lgr.Error(err, "request was not valid")
-		return nil, xerrors.Wrapf(xerrors.CodeInvalidArgument, err, "request was invalid: %s", err.Error())
-	}
+	//if err := req.ValidateAll(); err != nil {
+	//	srv.lgr.Error(err, "request was not valid")
+	//	return nil, xerrors.Wrapf(xerrors.CodeInvalidArgument, err, "request was invalid: %s", err.Error())
+	//}
 
 	resp, err := srv.service.CreateReview(ctx, toModelCreateReviewReq(req))
 	if err != nil {
