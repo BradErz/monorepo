@@ -23,12 +23,7 @@ plugins:
     opt:
       - paths=source_relative
       - lang=go
-  # - name: js
-  #   out: gen/js
-  #   opt:
-  #     - import_style=commonjs:$OUT_DIR
-  # - name: grpc-web
-  #   out: gen/js
-  #   opt:
-  #     - import_style=commonjs
-  #     - mode=grpcwebtext
+  - name: js
+    out: ui/packages/shared/client/src
+    opt:
+      - import_style=commonjs,binary
