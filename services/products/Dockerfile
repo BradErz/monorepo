@@ -1,4 +1,4 @@
-FROM golang:1.18-alpine as base
+FROM golang:1.19-alpine as base
 
 WORKDIR /app
 
@@ -17,7 +17,6 @@ ARG PROJECT
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     GOOS=linux GOARCH=amd64 go build -o server ${PROJECT}
-
 
 FROM scratch AS release
 

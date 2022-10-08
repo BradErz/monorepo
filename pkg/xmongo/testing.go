@@ -16,7 +16,10 @@ func TestingSetup(t testing.TB, dbName string, opts ...Option) (svc *Service, te
 	lgr, err := xlogger.New()
 	require.NoError(t, err)
 
-	svc, err = New(lgr, dbName, opts...)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	svc, err = New(ctx, lgr, dbName, opts...)
 	require.NoError(t, err)
 
 	return svc, func() {

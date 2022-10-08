@@ -22,13 +22,13 @@ type Service struct {
 	Database *mongo.Database
 }
 
-func New(lgr logr.Logger, dbName string, opts ...Option) (*Service, error) {
+func New(ctx context.Context, lgr logr.Logger, dbName string, opts ...Option) (*Service, error) {
 	conf, err := getConfig(opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load config for mongodb: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
 
 	clientOpts := options.Client()
@@ -40,7 +40,7 @@ func New(lgr logr.Logger, dbName string, opts ...Option) (*Service, error) {
 		return nil, fmt.Errorf("failed to connect to mongodb: %w", err)
 	}
 
-	ctx, cancel = context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel = context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 	if err = client.Ping(ctx, readpref.Primary()); err != nil {
 		return nil, fmt.Errorf("failed to ping mongodb: %w", err)

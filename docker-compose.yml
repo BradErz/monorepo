@@ -13,6 +13,7 @@ services:
      - TELEMETRY_JAEGER_COLLECTOR_ENDPOINT=http://jaeger:14268/api/traces
    ports:
      - "8001:50051"
+     - "2222:2222"
    restart: on-failure
    volumes:
      - ./:/usr/src/app
@@ -21,6 +22,7 @@ services:
      - monorepo_net
    depends_on:
      - mongo
+     - jaeger
 
   products:
     build:
@@ -43,17 +45,18 @@ services:
       - monorepo_net
     depends_on:
       - mongo
+      - jaeger
 
-  envoy:
-    image: envoyproxy/envoy:v1.21.1
-    ports:
-      - "10000:10000"
-      - "9901:9901"
-    volumes:
-      - ./services/envoy/envoy.yaml:/etc/envoy/envoy.yaml
-    restart: on-failure
-    networks:
-      - monorepo_net
+  # envoy:
+  #   image: envoyproxy/envoy:v1.21.1
+  #   ports:
+  #     - "10000:10000"
+  #     - "9901:9901"
+  #   volumes:
+  #     - ./services/envoy/envoy.yaml:/etc/envoy/envoy.yaml
+  #   restart: on-failure
+  #   networks:
+  #     - monorepo_net
 
   mongo:
     image: mongo:5

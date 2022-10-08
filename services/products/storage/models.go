@@ -61,7 +61,7 @@ func fromListProductsRequests(req *models.ListProductRequest) bson.M {
 	return bson.M{}
 }
 
-func parseUpdateProductRequest(req *models.UpdateProductRequest) (bson.M, bson.M) {
+func parseUpdateProductRequest(req *models.UpdateProductRequest) (filter, update bson.M) {
 	updates := bson.M{}
 	for _, path := range req.Paths {
 		switch path {

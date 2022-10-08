@@ -6,6 +6,7 @@ type Config struct {
 	ServiceName             string `envconfig:"SERVICE_NAME"`
 	Environment             string `envconfig:"ENV"`
 	Enabled                 bool   `envconfig:"ENABLED"`
+	MetricsEnabled          bool
 	JaegerCollectorEndpoint string `envconfig:"JAEGER_COLLECTOR_ENDPOINT"`
 }
 
@@ -14,6 +15,12 @@ type Option func(conf *Config)
 func WithEnabled() Option {
 	return func(conf *Config) {
 		conf.Enabled = true
+	}
+}
+
+func WithMetricsEnabled() Option {
+	return func(conf *Config) {
+		conf.MetricsEnabled = true
 	}
 }
 

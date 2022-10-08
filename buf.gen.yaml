@@ -11,24 +11,12 @@ managed:
 plugins:
   - name: go
     out: gen/go
-    opt:
-      - paths=source_relative
-  - name: go-grpc
+    opt: paths=source_relative
+  - name: connect-go
     out: gen/go
-    opt:
-      - paths=source_relative
-      - require_unimplemented_servers=false
-#  - name: validate
-#    out: gen/go
-#    opt:
-#      - paths=source_relative
-#      - lang=go
-  - name: js
-    out: services/web/packages/client/src
-    opt:
-      - import_style=commonjs,binary
-  - name: ts
-    path: ./node_modules/.bin/protoc-gen-ts
-    out: services/web/packages/client/src
-    opt:
-      - service=grpc-web
+    opt: paths=source_relative
+  # - name: validate
+  #   out: gen/go
+  #   opt:
+  #     - paths=source_relative
+  #     - lang=go

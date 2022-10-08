@@ -2,25 +2,20 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
-	"os"
+	"net"
+	"net/http"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"google.golang.org/grpc/credentials/insecure"
-
+	"github.com/BradErz/monorepo/pkg/xconnect"
 	"github.com/BradErz/monorepo/pkg/xlogger"
+	"github.com/bufbuild/connect-go"
 
-	reviewsv1 "github.com/BradErz/monorepo/gen/go/reviews/v1"
+	"github.com/BradErz/monorepo/gen/go/products/v1/productsv1connect"
 	"github.com/BradErz/monorepo/pkg/telemetry"
-	"github.com/oklog/run"
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
-	"google.golang.org/grpc"
-
-	"github.com/BradErz/monorepo/pkg/xgrpc"
 
 	"github.com/BradErz/monorepo/pkg/xmongo"
 
@@ -37,81 +32,62 @@ func main() {
 }
 
 func app() error {
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
 	lgr, err := xlogger.New()
 	if err != nil {
 		return fmt.Errorf("failed to create xlogger: %w", err)
 	}
 
-	if _, e := telemetry.Init(lgr, telemetry.WithServiceName("products")); e != nil {
-		return fmt.Errorf("failed to setup telemetry: %w", e)
-	}
-
-	mon, err := xmongo.New(lgr, "products-service")
+	_, tpShutdown, err := telemetry.Init(lgr, telemetry.WithServiceName("products"))
 	if err != nil {
-		return fmt.Errorf("failed to create mongoclient: %w", err)
+		return fmt.Errorf("failed to setup telemetry: %w", err)
 	}
-	defer func() {
-		_ = mon.Stop(context.Background())
-	}()
 
-	store := storage.NewProducts(mon.Database)
-
-	grpcOpts := []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
-		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
-	}
-	reviewsConn, err := grpc.Dial("reviews:50051", grpcOpts...)
+	db, err := xmongo.New(ctx, lgr, "products-service")
 	if err != nil {
-		return fmt.Errorf("failed to dial to reviews service: %w", err)
+		return fmt.Errorf("failed to create mongo client: %w", err)
 	}
-	reviewsClient := reviewsv1.NewReviewsServiceClient(reviewsConn)
+
+	store := storage.NewProducts(db.Database)
 
 	svc := service.NewProducts(store)
-	productsSrv, err := web.New(lgr, svc, reviewsClient)
+	productsSrv := web.New(lgr, svc)
+
+	mux := http.NewServeMux()
+	interceptors := connect.WithInterceptors(xconnect.ErrorsInterceptor())
+	mux.Handle(productsv1connect.NewProductsServiceHandler(productsSrv, interceptors))
+
+	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
-		return fmt.Errorf("failed to listen on port: %w", err)
+		return fmt.Errorf("failed to create listener: %w", err)
+	}
+	srv := xconnect.NewServer(mux, lis)
+
+	go func() {
+		if err := srv.Start(); err != nil {
+			lgr.Error(err, "failed to start server")
+		}
+	}()
+	lgr.Info("application started", "addr", srv.Addr())
+
+	// wait for shutdown
+	<-ctx.Done()
+	lgr.Info("application shutting down")
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		lgr.Error(err, "failed to shutdown server")
 	}
 
-	grpcSrv, err := xgrpc.NewServer(lgr,
-		xgrpc.WithGracePeriod(time.Second*2),
-		xgrpc.WithRegisterFunc(web.Register(productsSrv)),
-	)
-	if err != nil {
-		return fmt.Errorf("failed to create grpc.Server: %w", err)
+	if err := db.Stop(ctx); err != nil {
+		lgr.Error(err, "failed to stop database connections")
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	var g run.Group
-	{
-		g.Add(func() error {
-			c := make(chan os.Signal, 1)
-			signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
-			select {
-			case <-c:
-				return nil
-			case <-ctx.Done():
-				return ctx.Err()
-			}
-		}, func(e error) {
-			cancel()
-		})
-	}
+	tpShutdown(ctx)
 
-	{
-		g.Add(func() error {
-			return grpcSrv.ListenAndServe()
-		}, func(err error) {
-			if e := grpcSrv.Shutdown(err); e != nil {
-				lgr.Error(e, "failed to shutdown")
-			}
-		})
-	}
-
-	err = g.Run()
-	if errors.Is(err, context.Canceled) {
-		return nil
-	}
-
-	return err
+	return nil
 }

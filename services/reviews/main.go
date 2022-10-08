@@ -4,13 +4,18 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
+	"net/http"
+	"os/signal"
+	"syscall"
 	"time"
 
+	"github.com/BradErz/monorepo/gen/go/reviews/v1/reviewsv1connect"
+	"github.com/BradErz/monorepo/pkg/xconnect"
 	"github.com/BradErz/monorepo/pkg/xlogger"
+	"github.com/bufbuild/connect-go"
 
 	"github.com/BradErz/monorepo/pkg/telemetry"
-
-	"github.com/BradErz/monorepo/pkg/xgrpc"
 
 	"github.com/BradErz/monorepo/pkg/xmongo"
 
@@ -27,41 +32,62 @@ func main() {
 }
 
 func app() error {
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
 	lgr, err := xlogger.New()
 	if err != nil {
 		return fmt.Errorf("failed to create xlogger: %w", err)
 	}
 
-	if _, e := telemetry.Init(lgr, telemetry.WithServiceName("reviews")); e != nil {
-		return fmt.Errorf("failed to setup telemetry: %w", e)
+	_, tpShutdown, err := telemetry.Init(lgr, telemetry.WithServiceName("reviews"))
+	if err != nil {
+		return fmt.Errorf("failed to setup telemetry: %w", err)
 	}
 
-	mon, err := xmongo.New(lgr, "reviews-service")
+	db, err := xmongo.New(ctx, lgr, "reviews-service")
 	if err != nil {
 		return fmt.Errorf("failed to create mongoclient: %w", err)
 	}
-	defer func() {
-		_ = mon.Stop(context.Background())
-	}()
-	store := storage.NewReviews(mon.Database)
+
+	store := storage.NewReviews(db.Database)
 
 	svc := service.NewReviews(store)
-	reviewsSrv, err := web.New(lgr, svc)
+	reviewsSrv := web.New(lgr, svc)
+
+	mux := http.NewServeMux()
+	interceptors := connect.WithInterceptors(xconnect.ErrorsInterceptor())
+	mux.Handle(reviewsv1connect.NewReviewsServiceHandler(reviewsSrv, interceptors))
+
+	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
-		return fmt.Errorf("failed to listen on port: %w", err)
+		return fmt.Errorf("failed to create listener: %w", err)
+	}
+	srv := xconnect.NewServer(mux, lis)
+
+	go func() {
+		if err := srv.Start(); err != nil {
+			lgr.Error(err, "failed to start server")
+		}
+	}()
+	lgr.Info("application started", "addr", srv.Addr())
+
+	// wait for shutdown
+	<-ctx.Done()
+	lgr.Info("application shutting down")
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		lgr.Error(err, "failed to shutdown server")
 	}
 
-	grpcSrv, err := xgrpc.NewServer(lgr,
-		xgrpc.WithGracePeriod(time.Second*2),
-		xgrpc.WithRegisterFunc(web.Register(reviewsSrv)),
-	)
-	if err != nil {
-		return fmt.Errorf("failed to create grpc.Server: %w", err)
+	if err := db.Stop(ctx); err != nil {
+		lgr.Error(err, "failed to stop database connections")
 	}
 
-	if err := grpcSrv.ListenAndServe(); err != nil {
-		return fmt.Errorf("failed to run server: %w", err)
-	}
+	tpShutdown(ctx)
 
 	return nil
 }

@@ -4,19 +4,19 @@ import (
 	"context"
 	"fmt"
 	"log"
-
-	"google.golang.org/grpc/credentials/insecure"
+	"net/http"
+	"time"
 
 	"github.com/BradErz/monorepo/pkg/xlogger"
-
-	"google.golang.org/protobuf/types/known/fieldmaskpb"
+	"github.com/bufbuild/connect-go"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	productsv1 "github.com/BradErz/monorepo/gen/go/products/v1"
+	"github.com/BradErz/monorepo/gen/go/products/v1/productsv1connect"
 	reviewsv1 "github.com/BradErz/monorepo/gen/go/reviews/v1"
+	"github.com/BradErz/monorepo/gen/go/reviews/v1/reviewsv1connect"
 
 	"github.com/BradErz/monorepo/pkg/telemetry"
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
-	"google.golang.org/grpc"
 )
 
 func main() {
@@ -31,28 +31,31 @@ func app() error {
 		return fmt.Errorf("failed to create xlogger: %w", err)
 	}
 
-	tracer, err := telemetry.Init(lgr, telemetry.WithServiceName("frontend"), telemetry.WithEnabled())
+	tracer, stop, err := telemetry.Init(lgr, telemetry.WithServiceName("frontend"), telemetry.WithEnabled())
 	if err != nil {
 		return fmt.Errorf("failed to setup telemetry: %w", err)
 	}
+	defer stop(context.Background())
 
-	grpcOpts := []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
-		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
+	client := &http.Client{
+		Timeout: time.Second,
+		Transport: otelhttp.NewTransport(http.DefaultTransport,
+			// operation is always sent as an empty sting...
+			otelhttp.WithSpanNameFormatter(func(operation string, r *http.Request) string {
+				return "http.client " + r.URL.Path
+			}),
+		),
 	}
 
-	productConn, err := grpc.Dial("localhost:8002", grpcOpts...)
-	if err != nil {
-		return fmt.Errorf("failed to dial to products service: %w", err)
-	}
-	reviewsConn, err := grpc.Dial("localhost:8001", grpcOpts...)
-	if err != nil {
-		return fmt.Errorf("failed to dial to reviews service: %w", err)
-	}
+	productsClient := productsv1connect.NewProductsServiceClient(
+		client,
+		"http://localhost:8002",
+	)
 
-	productsClient := productsv1.NewProductsServiceClient(productConn)
-	reviewsClient := reviewsv1.NewReviewsServiceClient(reviewsConn)
+	reviewsClient := reviewsv1connect.NewReviewsServiceClient(
+		client,
+		"http://localhost:8001",
+	)
 
 	ctx := context.Background()
 
@@ -66,33 +69,34 @@ func app() error {
 		Price:       9.99,
 		Category:    productsv1.ProductCategory_PRODUCT_CATEGORY_BOOK,
 	}
-	resp, err := productsClient.CreateProduct(ctx, req)
+
+	resp, err := productsClient.CreateProduct(ctx, connect.NewRequest(req))
 	if err != nil {
 		return fmt.Errorf("failed to create product: %w", err)
 	}
-	lgr.Info("got resp from creating product", "resp", resp.GetProduct())
+	lgr.Info("got resp from creating product", "resp", resp.Msg.GetProduct().GetId())
 
 	createReviewReq := &reviewsv1.CreateReviewRequest{
-		ProductId: resp.GetProduct().GetId(),
+		ProductId: resp.Msg.GetProduct().GetId(),
 		Title:     "this is my amazing review",
 		Body:      "this product really is a life saver i do not know what i would do without it",
 		Rating:    5,
 	}
 
-	createReviewResp, err := reviewsClient.CreateReview(ctx, createReviewReq)
+	createReviewResp, err := reviewsClient.CreateReview(ctx, connect.NewRequest(createReviewReq))
 	if err != nil {
 		return fmt.Errorf("failed to create review for %s: %w", createReviewReq.GetProductId(), err)
 	}
 
-	lgr.Info("got resp from creating review", "resp", createReviewResp.GetReview())
+	lgr.Info("got resp from creating review", "resp", createReviewResp.Msg.GetReview())
 
-	overviewReq := &productsv1.GetProductOverviewRequest{ProductId: createReviewReq.GetProductId(), FieldMask: &fieldmaskpb.FieldMask{Paths: []string{"reviews"}}}
-	overviewResp, err := productsClient.GetProductOverview(ctx, overviewReq)
-	if err != nil {
-		return fmt.Errorf("failed to create review for %s: %w", createReviewReq.GetProductId(), err)
-	}
+	// overviewReq := &productsv1.GetProductOverviewRequest{ProductId: createReviewReq.GetProductId(), FieldMask: &fieldmaskpb.FieldMask{Paths: []string{"reviews"}}}
+	// overviewResp, err := productsClient.GetProductOverview(ctx, overviewReq)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to create review for %s: %w", createReviewReq.GetProductId(), err)
+	// }
 
-	lgr.Info("got resp from overview review", "resp", overviewResp.GetProductOverview())
+	// lgr.Info("got resp from overview review", "resp", overviewResp.GetProductOverview())
 
 	return nil
 }

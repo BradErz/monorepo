@@ -3,119 +3,95 @@ package web
 import (
 	"context"
 	"strings"
-	"time"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/go-logr/logr"
-
-	"google.golang.org/grpc"
-
-	"github.com/BradErz/monorepo/pkg/xerrors"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/BradErz/monorepo/services/products/models"
 
 	productsv1 "github.com/BradErz/monorepo/gen/go/products/v1"
-	reviewsv1 "github.com/BradErz/monorepo/gen/go/reviews/v1"
-
-	"github.com/BradErz/monorepo/pkg/xgrpc"
+	"github.com/BradErz/monorepo/gen/go/products/v1/productsv1connect"
 )
 
 type Server struct {
-	lgr           logr.Logger
-	service       Service
-	reviewsClient reviewsv1.ReviewsServiceClient
+	lgr     logr.Logger
+	service Service
 }
 
-var _ productsv1.ProductsServiceServer = (*Server)(nil)
+var _ productsv1connect.ProductsServiceHandler = (*Server)(nil)
 
-func New(lgr logr.Logger, service Service, reviewsClient reviewsv1.ReviewsServiceClient) (*Server, error) {
+func New(lgr logr.Logger, service Service) *Server {
 	return &Server{
-		lgr:           lgr,
-		service:       service,
-		reviewsClient: reviewsClient,
-	}, nil
-}
-
-func Register(productsSrv productsv1.ProductsServiceServer) xgrpc.RegisterServerFunc {
-	return func(s *grpc.Server) {
-		productsv1.RegisterProductsServiceServer(s, productsSrv)
+		lgr:     lgr,
+		service: service,
 	}
 }
 
-func (srv *Server) GetProduct(ctx context.Context, req *productsv1.GetProductRequest) (*productsv1.GetProductResponse, error) {
-	product, err := srv.service.GetProduct(ctx, &models.GetProductRequest{ID: req.GetId()})
+func (s *Server) ListProducts(ctx context.Context, req *connect.Request[productsv1.ListProductsRequest]) (*connect.Response[productsv1.ListProductsResponse], error) {
+	resp, err := s.service.ListProducts(ctx, toModelListProductRequest(req.Msg))
 	if err != nil {
 		return nil, err
 	}
-	return &productsv1.GetProductResponse{Product: toProtoProduct(product)}, nil
+	return connect.NewResponse(toProtoListProductResponse(resp)), nil
 }
 
-func (srv *Server) GetProductOverview(ctx context.Context, req *productsv1.GetProductOverviewRequest) (*productsv1.GetProductOverviewResponse, error) {
-	product, err := srv.service.GetProduct(ctx, &models.GetProductRequest{ID: req.GetProductId()})
+func (s *Server) CreateProduct(ctx context.Context, req *connect.Request[productsv1.CreateProductRequest]) (*connect.Response[productsv1.CreateProductResponse], error) {
+	resp, err := s.service.CreateProduct(ctx, toModelCreateProductRequest(req.Msg))
 	if err != nil {
 		return nil, err
 	}
-
-	protoResp := &productsv1.GetProductOverviewResponse{
-		ProductOverview: &productsv1.ProductOverview{
-			Product: toProtoProduct(product),
-		},
-	}
-
-	for _, v := range req.GetFieldMask().GetPaths() {
-		if v == "reviews" {
-			srv.lgr.Info("path was a reviews")
-			listReviewReq := &reviewsv1.ListReviewsRequest{ProductId: req.GetProductId(), PageSize: 10}
-			reviewResp, err := srv.reviewsClient.ListReviews(ctx, listReviewReq)
-			if err != nil {
-				return nil, xerrors.Wrapf(xerrors.CodeInternal, err, "could not get reviews for %s", req.GetProductId())
-			}
-			protoResp.ProductOverview.Reviews = reviewResp.GetReviews()
-		}
-	}
-
-	return protoResp, nil
+	return connect.NewResponse(&productsv1.CreateProductResponse{Product: toProtoProduct(resp)}), nil
 }
 
-func (srv *Server) ListProducts(ctx context.Context, req *productsv1.ListProductsRequest) (*productsv1.ListProductsResponse, error) {
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
-	defer cancel()
-
-	listResp, err := srv.service.ListProducts(ctx, toModelListProductRequest(req))
+func (s *Server) UpdateProduct(ctx context.Context, req *connect.Request[productsv1.UpdateProductRequest]) (*connect.Response[productsv1.UpdateProductResponse], error) {
+	resp, err := s.service.UpdateProduct(ctx, toModelUpdateProductRequest(req.Msg))
 	if err != nil {
 		return nil, err
 	}
-
-	return toProtoListProductResponse(listResp), nil
+	return connect.NewResponse(&productsv1.UpdateProductResponse{Product: toProtoProduct(resp)}), nil
 }
 
-func (srv *Server) CreateProduct(ctx context.Context, req *productsv1.CreateProductRequest) (*productsv1.CreateProductResponse, error) {
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
-	defer cancel()
-
-	//if err := req.Validate(); err != nil {
-	//	return nil, xerrors.Newf(xerrors.CodeInvalidArgument, err.Error())
-	//}
-
-	product, err := srv.service.CreateProduct(ctx, toModelCreateProductRequest(req))
+func (s *Server) GetProduct(ctx context.Context, req *connect.Request[productsv1.GetProductRequest]) (*connect.Response[productsv1.GetProductResponse], error) {
+	resp, err := s.service.GetProduct(ctx, &models.GetProductRequest{ID: req.Msg.Id})
 	if err != nil {
 		return nil, err
 	}
-	return &productsv1.CreateProductResponse{Product: toProtoProduct(product)}, nil
+	return connect.NewResponse(&productsv1.GetProductResponse{Product: toProtoProduct(resp)}), nil
 }
 
-func (srv *Server) UpdateProduct(ctx context.Context, req *productsv1.UpdateProductRequest) (*productsv1.UpdateProductResponse, error) {
-	if !req.GetFieldMask().IsValid(req.GetProduct()) {
-		return nil, xerrors.Newf(xerrors.CodeInvalidArgument, "specified paths in field_mask are invalid")
-	}
-	product, err := srv.service.UpdateProduct(ctx, toModelUpdateProductRequest(req))
-	if err != nil {
-		return nil, err
-	}
-
-	return &productsv1.UpdateProductResponse{Product: toProtoProduct(product)}, nil
+// TODO: fix this :joy:
+func (s *Server) GetProductOverview(ctx context.Context, req *connect.Request[productsv1.GetProductOverviewRequest]) (*connect.Response[productsv1.GetProductOverviewResponse], error) {
+	return nil, nil
 }
+
+// func (srv *Server) GetProductOverview(ctx context.Context, req *productsv1.GetProductOverviewRequest) (*productsv1.GetProductOverviewResponse, error) {
+// 	product, err := srv.service.GetProduct(ctx, &models.GetProductRequest{ID: req.GetProductId()})
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	protoResp := &productsv1.GetProductOverviewResponse{
+// 		ProductOverview: &productsv1.ProductOverview{
+// 			Product: toProtoProduct(product),
+// 		},
+// 	}
+
+// 	for _, v := range req.GetFieldMask().GetPaths() {
+// 		if v == "reviews" {
+// 			srv.lgr.Info("path was a reviews")
+// 			listReviewReq := &reviewsv1.ListReviewsRequest{ProductId: req.GetProductId(), PageSize: 10}
+// 			reviewResp, err := srv.reviewsClient.ListReviews(ctx, listReviewReq)
+// 			if err != nil {
+// 				return nil, xerrors.Wrapf(xerrors.CodeInternal, err, "could not get reviews for %s", req.GetProductId())
+// 			}
+// 			protoResp.ProductOverview.Reviews = reviewResp.GetReviews()
+// 		}
+// 	}
+
+// 	return protoResp, nil
+// }
 
 func toModelUpdateProductRequest(req *productsv1.UpdateProductRequest) *models.UpdateProductRequest {
 	return &models.UpdateProductRequest{
