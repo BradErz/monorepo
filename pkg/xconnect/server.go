@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/rs/cors"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -17,12 +18,13 @@ type Server struct {
 }
 
 func NewServer(handler http.Handler, lis net.Listener) *Server {
+	c := cors.Default()
 	return &Server{
 		lis: lis,
 		httpServer: &http.Server{
 			Handler: h2c.NewHandler(
 				otelhttp.NewHandler(
-					handler,
+					c.Handler(handler),
 					"http.server",
 					otelhttp.WithSpanNameFormatter(func(operation string, r *http.Request) string {
 						return operation + " " + r.URL.Path
