@@ -26,7 +26,7 @@ const Home: NextPage = () => {
   const reviewsClient = createPromiseClient(
     ReviewsService,
     createConnectTransport({
-      baseUrl: "http://localhost:8001",
+      baseUrl: "http://localhost:10000",
     })
   );
 
