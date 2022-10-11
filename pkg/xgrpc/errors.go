@@ -40,17 +40,17 @@ func mapCodes(err error) error {
 		return err
 	}
 
-	c, ok := getAllCodes()[myError.Code()]
+	c, ok := getAllCodes()[myError.Code]
 	if !ok {
 		c = codes.Unknown
 	}
 
-	st := status.New(c, myError.Msg())
-	if myError.Details() != nil {
+	st := status.New(c, myError.Message)
+	if myError.Details != nil {
 		st, _ = st.WithDetails(&errdetails.ErrorInfo{
 			Reason:   c.String(),
 			Domain:   "products",
-			Metadata: myError.Details(),
+			Metadata: myError.Details,
 		})
 	}
 
