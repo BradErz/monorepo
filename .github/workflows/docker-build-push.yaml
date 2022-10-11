@@ -85,5 +85,5 @@ jobs:
         env:
           COSIGN_EXPERIMENTAL: "true"
         run: |
-          trivy image --format cosign-vuln -o vuln.json fromJSON(steps.meta.outputs.json).tags[0]
-          cosign attest --type vuln --predicate vuln.json fromJSON(steps.meta.outputs.json).tags[0]
+          trivy image --format cosign-vuln -o vuln.json ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          cosign attest --type vuln --predicate vuln.json ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
