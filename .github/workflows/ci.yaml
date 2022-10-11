@@ -47,6 +47,7 @@ jobs:
           only-new-issues: true
 
   validate-protos:
+  
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -63,3 +64,19 @@ jobs:
         with:
           input: 'proto'
           against: 'https://github.com/braderz/monorepo.git#branch=main,ref=HEAD~1,subdir=proto'
+
+  build-and-push:
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      fail-fast: true
+      matrix:
+        services: 
+          - products
+          - reviews
+    uses: ./.github/workflows/docker-build-push.yaml
+    with:
+      service: ${{ matrix.services }}
+      
