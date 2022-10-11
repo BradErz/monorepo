@@ -8,7 +8,6 @@ on:
         description: "Name of the service you wish to build. It must be in the services directory and it must have a Dockerfile specified under its folder."
         type: string
 
-
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/${{ inputs.service}}
@@ -63,27 +62,30 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Sign the docker image
-        env:
-          COSIGN_EXPERIMENTAL: "true"
-        run: echo "${{ steps.meta.outputs.tags }}" | xargs -I {} cosign sign {}@${{ steps.build-and-push.outputs.digest }}
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.7.1
         with:
           image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v2
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: "trivy-results.sarif"
 
       - name: Trivy scan attestation
+        uses: aquasecurity/trivy-action@0.7.1
+        with:
+          image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          format: "cosign-vuln"
+          output: "vuln.json"
+
+      - name: Sign the docker image
         env:
           COSIGN_EXPERIMENTAL: "true"
         run: |
-          trivy image --format cosign-vuln -o vuln.json ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          echo "${{ steps.meta.outputs.tags }}" | xargs -I {} cosign sign {}@${{ steps.build-and-push.outputs.digest }}
           cosign attest --type vuln --predicate vuln.json ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
