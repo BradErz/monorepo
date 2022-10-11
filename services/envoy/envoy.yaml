@@ -11,6 +11,10 @@ static_resources:
                 "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
                 generate_request_id: true
                 tracing:
+                  custom_tags:
+                    - tag: job
+                      literal:
+                        value: app/envoy
                   provider:
                     name: envoy.tracers.zipkin
                     typed_config:
@@ -19,6 +23,43 @@ static_resources:
                       collector_endpoint: "/api/v2/spans"
                       shared_span_context: true
                       collector_endpoint_version: HTTP_JSON
+                access_log:
+                - name: envoy.access_loggers.stdout
+                  typed_config:
+                    "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+                    log_format:
+                      json_format: 
+                        "@timestamp": "%START_TIME%"
+                        host:
+                          hostname: "%HOSTNAME%"
+                        trace_id: "%REQ(X-B3-TRACEID)%"
+                        span_id: "%REQ(X-B3-SPANID)%"
+                        http:
+                          request:
+                            body:
+                              bytes: "%BYTES_RECEIVED%"
+                            duration: "%DURATION%"
+                            duration_req: "%REQUEST_DURATION%"
+                            headers:
+                              accept: "%REQ(ACCEPT)%"
+                              authority: "%REQ(:AUTHORITY)%"
+                              content-length: "%REQ(CONTENT-LENGTH)%"
+                              content-type: "%REQ(CONTENT-TYPE)%"
+                              host: "%REQ(HOST)%"
+                              id: "%REQ(X-REQUEST-ID)%"
+                              session-id: "%REQ(SESSION-ID)%"
+                              correlation-id: "%REQ(CORRELATION-ID)%"
+                              x_forwarded_for: "%REQ(X-FORWARDED-FOR)%"
+                              x_forwarded_proto: "%REQ(X-FORWARDED-PROTO)%"
+                              x_envoy_internal: "%REQ(X-ENVOY-INTERNAL)%"
+                              x_envoy_decorator_operation: "%REQ(X-ENVOY-DECORATOR-OPERATION)%"
+                              x_envoy_expected_rq_timeout_ms: "%REQ(X-ENVOY-EXPECTED-RQ-TIMEOUT-MS)%"
+                              x_b3_traceid: "%REQ(X-B3-TRACEID)%"
+                              x_b3_parentspanid: "%REQ(X-B3-PARENTSPANID)%"
+                              x_b3_spanid: "%REQ(X-B3-SPANID)%"
+                              x_b3_sampled: "%REQ(X-B3-SAMPLED)%"
+                            method: "%REQ(:METHOD)%"
+                            path: "%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%"
                 codec_type: AUTO
                 stat_prefix: ingress_http
                 route_config:
@@ -44,8 +85,12 @@ static_resources:
                         max_age: "1728000"
                         # expose_headers: custom-header-1,grpc-status,grpc-message
                 http_filters:
-                  - name: envoy.filters.http.cors
-                  - name: envoy.filters.http.router
+                - name: envoy.filters.http.cors
+                  typed_config:
+                    "@type": type.googleapis.com/envoy.extensions.filters.http.cors.v3.Cors
+                - name: envoy.filters.http.router
+                  typed_config:
+                    "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
                 use_remote_address: true
   clusters:
     - name: products_service
@@ -65,7 +110,7 @@ static_resources:
     - name: reviews_service
       type: STRICT_DNS
       lb_policy: ROUND_ROBIN
-      # http2_protocol_options: {}
+      http2_protocol_options: {}
       load_assignment:
         cluster_name: reviews_service
         endpoints:
@@ -86,7 +131,7 @@ static_resources:
               - endpoint:
                   address:
                     socket_address:
-                      address: jaeger
+                      address: tempo
                       port_value: 9411
 admin:
   address:

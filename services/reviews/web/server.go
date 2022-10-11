@@ -47,37 +47,6 @@ func (s *Server) ListReviews(ctx context.Context, req *connect.Request[reviewsv1
 	return connect.NewResponse(toProtoListReviewResponse(resp)), nil
 }
 
-func Register(svc reviewsv1connect.ReviewsServiceHandler, opts ...connect.HandlerOption) {
-}
-
-// func Register(reviewSrv reviewsv1connect.ReviewsServiceHandler) xgrpc.RegisterServerFunc {
-// 	return func(s *grpc.Server) {
-// 		reviewsv1connect.RegisterReviewsServiceServer(s, reviewSrv)
-// 	}
-// }
-
-// func (srv *Server) CreateReview(ctx context.Context, req *reviewsv1.CreateReviewRequest) (*reviewsv1.CreateReviewResponse, error) {
-// 	// if err := req.ValidateAll(); err != nil {
-// 	// 	srv.lgr.Error(err, "request was not valid")
-// 	// 	return nil, xerrors.Wrapf(xerrors.CodeInvalidArgument, err, "request was invalid: %s", err.Error())
-// 	// }
-
-// 	resp, err := srv.service.CreateReview(ctx, toModelCreateReviewReq(req))
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return &reviewsv1.CreateReviewResponse{Review: toProtoReview(resp)}, nil
-// }
-
-// func (srv *Server) ListReviews(ctx context.Context, req *reviewsv1.ListReviewsRequest) (*reviewsv1.ListReviewsResponse, error) {
-// 	resp, err := srv.service.ListReviews(ctx, toModelListReviewReq(req))
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return toProtoListReviewResponse(resp), nil
-// }
-
 func toModelListReviewReq(req *reviewsv1.ListReviewsRequest) *models.ListReviewsRequest {
 	return &models.ListReviewsRequest{
 		ProductID: req.GetProductId(),

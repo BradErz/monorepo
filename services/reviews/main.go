@@ -40,7 +40,7 @@ func app() error {
 		return fmt.Errorf("failed to create xlogger: %w", err)
 	}
 
-	_, tpShutdown, err := telemetry.Init(lgr, telemetry.WithServiceName("reviews"))
+	_, tpShutdown, err := telemetry.Init(lgr, telemetry.WithServiceName("reviews"), telemetry.WithMetricsEnabled())
 	if err != nil {
 		return fmt.Errorf("failed to setup telemetry: %w", err)
 	}
@@ -56,7 +56,10 @@ func app() error {
 	reviewsSrv := web.New(lgr, svc)
 
 	mux := http.NewServeMux()
-	interceptors := connect.WithInterceptors(xconnect.ErrorsInterceptor())
+	interceptors := connect.WithInterceptors(
+		xconnect.LogrInterceptor(lgr),
+		xconnect.ErrorsInterceptor(),
+	)
 	mux.Handle(reviewsv1connect.NewReviewsServiceHandler(reviewsSrv, interceptors))
 
 	lis, err := net.Listen("tcp", ":50051")

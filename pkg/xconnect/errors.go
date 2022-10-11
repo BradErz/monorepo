@@ -30,18 +30,18 @@ func mapError(err error) error {
 		return err
 	}
 
-	c, ok := getAllCodes()[myError.Code()]
+	c, ok := getAllCodes()[myError.Code]
 	if !ok {
 		c = connect.CodeUnknown
 	}
 
 	// we dont want to expose implementation details which might be in the myError.error to
 	// the api so we always return the message
-	connectError := connect.NewError(c, errors.New(myError.Msg()))
-	if myError.Details() != nil {
+	connectError := connect.NewError(c, errors.New(myError.Message))
+	if myError.Details != nil {
 		detail, _ := connect.NewErrorDetail(&errdetails.ErrorInfo{
 			Reason:   c.String(),
-			Metadata: myError.Details(),
+			Metadata: myError.Details,
 		})
 		connectError.AddDetail(detail)
 	}

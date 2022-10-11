@@ -1,28 +1,43 @@
+x-logging: &default-logging
+  driver: loki
+  options:
+    loki-url: "http://localhost:3100/api/prom/push"
+    labels: namespace
+    loki-relabel-config: |
+      - action: replace
+        source_labels: ["namespace","compose_service"]
+        separator: "/"
+        target_label: job
+      - action: replace
+        source_labels: ["container_name"]
+        target_label: instance
+
+version: "3"
 services:
 
   reviews:
-   build:
-     context: ./
-     dockerfile: ./services/reviews/Dockerfile
-     args:
-       PROJECT: ./services/reviews
-   environment:
-     - APP_NAME=reviews
-     - MONGODB_URI=mongodb://mongo:27017/
-     - TELEMETRY_ENABLED=true
-     - TELEMETRY_JAEGER_COLLECTOR_ENDPOINT=http://jaeger:14268/api/traces
-   ports:
-     - "8001:50051"
-     - "2222:2222"
-   restart: on-failure
-   volumes:
-     - ./:/usr/src/app
-     - go-modules:/go/pkg/mod
-   networks:
-     - monorepo_net
-   depends_on:
-     - mongo
-     - jaeger
+    build:
+      context: ./
+      dockerfile: ./services/reviews/Dockerfile
+      args:
+        PROJECT: ./services/reviews
+    environment:
+      - APP_NAME=reviews
+      - MONGODB_URI=mongodb://mongo:27017/
+      - TELEMETRY_ENABLED=true
+      - TELEMETRY_JAEGER_COLLECTOR_ENDPOINT=http://tempo:14268/api/traces
+    ports:
+      - "8001:50051"
+    volumes:
+      - ./:/usr/src/app
+      - go-modules:/go/pkg/mod
+    networks:
+      - monorepo_net
+    depends_on:
+      - mongo
+    labels:
+      namespace: app
+    logging: *default-logging
 
   products:
     build:
@@ -34,10 +49,9 @@ services:
       - APP_NAME=products
       - MONGODB_URI=mongodb://mongo:27017/
       - TELEMETRY_ENABLED=true
-      - TELEMETRY_JAEGER_COLLECTOR_ENDPOINT=http://jaeger:14268/api/traces
+      - TELEMETRY_JAEGER_COLLECTOR_ENDPOINT=http://tempo:14268/api/traces
     ports:
       - "8002:50051"
-    restart: on-failure
     volumes:
       - ./:/usr/src/app
       - go-modules:/go/pkg/mod
@@ -45,40 +59,101 @@ services:
       - monorepo_net
     depends_on:
       - mongo
-      - jaeger
+    labels:
+      namespace: app      
+    logging: *default-logging
 
   envoy:
-    image: envoyproxy/envoy:v1.21.1
+    image: envoyproxy/envoy:v1.23.1
     ports:
       - "10000:10000"
       - "9901:9901"
     volumes:
       - ./services/envoy/envoy.yaml:/etc/envoy/envoy.yaml
-    restart: on-failure
     networks:
       - monorepo_net
+    labels:
+      namespace: app      
+    logging: *default-logging
 
   mongo:
     image: mongo:5
-    restart: always
     ports:
       - "27017:27017"
     networks:
       - monorepo_net
+    labels:
+      namespace: app      
     command: --quiet --logpath /dev/null
 
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-    command: --log-level=warn
+  grafana:
+    image: grafana/grafana:9.1.7
+    volumes:
+      - ./hack/docker-compose/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ./hack/docker-compose/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
+      - ./hack/docker-compose/dashboards:/etc/grafana/dashboards
     environment:
-      - COLLECTOR_ZIPKIN_HOST_PORT=9411
+     - GF_AUTH_ANONYMOUS_ENABLED=true
+     - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+     - GF_AUTH_DISABLE_LOGIN_FORM=true
     ports:
-      - "6831:6831/udp"
-      - "16686:16686"
-      - "14268:14268"
-      - "9411:9411"
+     - 3000:3000
+    labels:
+      namespace: monitoring
+    # logging: *default-logging
     networks:
       - monorepo_net
+
+  prometheus:
+    image: prom/prometheus:v2.39.1
+    user: root
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=1d
+      - --enable-feature=exemplar-storage
+      - --log.level=debug
+      - --web.enable-admin-api
+    volumes:
+      - ./hack/docker-compose/prometheus.yaml:/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
+    labels:
+      namespace: monitoring
+    # logging: *default-logging
+    networks:
+      - monorepo_net    
+
+  loki:
+    image: grafana/loki:2.6.1
+    command:
+      - -config.file=/etc/loki/local-config.yaml
+      - -table-manager.retention-period=1d
+      - -table-manager.retention-deletes-enabled=true
+    ports:
+      - "3100:3100"
+    labels:
+      namespace: monitoring
+    # logging: *default-logging
+    networks:
+      - monorepo_net    
+
+  tempo:
+    image: grafana/tempo:1.5.0
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ./hack/docker-compose/tempo.yaml:/etc/tempo.yaml
+    ports:
+      - "14268:14268"  # jaeger ingest
+      - "3200:3200"   # tempo
+      - "4317:4317"  # otlp grpc
+      - "4318:4318"  # otlp http
+      - "9411:9411"   # zipkin
+    labels:
+      namespace: monitoring
+    # logging: *default-logging
+    networks:
+      - monorepo_net    
 
 networks:
   monorepo_net:

@@ -14,8 +14,8 @@ func TestError(t *testing.T) {
 		myError := new(Error)
 		require.True(t, errors.As(err, &myError))
 
-		require.Equal(t, CodeInvalidArgument, myError.Code())
-		require.Nil(t, myError.Details())
+		require.Equal(t, CodeInvalidArgument, myError.Code)
+		require.Nil(t, myError.Details)
 	})
 	t.Run("Wrapf", func(t *testing.T) {
 		wrappedErr := errors.New("my wrapped error")
@@ -24,8 +24,8 @@ func TestError(t *testing.T) {
 		myError := new(Error)
 		require.True(t, errors.As(err, &myError))
 
-		require.Equal(t, CodeInvalidArgument, myError.Code())
-		require.Nil(t, myError.Details())
+		require.Equal(t, CodeInvalidArgument, myError.Code)
+		require.Nil(t, myError.Details)
 		require.True(t, errors.Is(err, wrappedErr))
 	})
 
@@ -39,8 +39,8 @@ func TestError(t *testing.T) {
 		myError := new(Error)
 		require.True(t, errors.As(err, &myError))
 
-		require.Equal(t, CodeInvalidArgument, myError.Code())
+		require.Equal(t, CodeInvalidArgument, myError.Code)
 		require.True(t, errors.Is(err, wrappedErr))
-		require.Equal(t, details, myError.Details())
+		require.Equal(t, details, myError.Details)
 	})
 }

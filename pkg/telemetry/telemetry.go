@@ -3,7 +3,6 @@ package telemetry
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -55,6 +54,7 @@ func Init(lgr logr.Logger, opts ...Option) (trace.Tracer, func(ctx context.Conte
 			semconv.SchemaURL,
 			semconv.ServiceNameKey.String(conf.ServiceName),
 			attribute.String("environment", conf.Environment),
+			attribute.String("job", "app/"+conf.ServiceName),
 		)),
 	)
 	otel.SetTracerProvider(tp)
@@ -65,6 +65,7 @@ func Init(lgr logr.Logger, opts ...Option) (trace.Tracer, func(ctx context.Conte
 		b3.New(),
 	))
 	if conf.MetricsEnabled {
+		lgr.Info("serving prometheus metrics")
 		prometheusMetrics()
 	}
 
@@ -90,8 +91,6 @@ func serveMetrics(collector prometheus.Collector) {
 		fmt.Printf("error registering collector: %v", err)
 		return
 	}
-
-	log.Printf("serving metrics at localhost:2222/metrics")
 
 	metricsMux := http.NewServeMux()
 	metricsMux.Handle("/metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
