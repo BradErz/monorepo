@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v3
+        with:
+          cache: true
+          go-version-file: 'go.mod'
+          
+      - name: start test dependencies
+        run: docker compose up -d mongo
+
+      - name: go test
+        run: go test ./... -race
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v3
+        with:
+          cache: true
+          go-version-file: 'go.mod'
+
+      - uses: golangci/golangci-lint-action@v3
+        with:
+          args: --out-${NO_FUTURE}format colored-line-number --verbose
+          only-new-issues: true
+
+  validate-protos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: bufbuild/buf-setup-action@v1.8.0
+
+      - run: buf format --diff --exit-code .
+
+      - uses: bufbuild/buf-lint-action@v1
+        with:
+          input: proto
+
+      - uses: bufbuild/buf-breaking-action@v1
+        with:
+          input: 'proto'
+          against: 'https://github.com/braderz/monorepo.git#branch=main,ref=HEAD~1,subdir=proto'
