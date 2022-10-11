@@ -14,7 +14,9 @@ FROM base AS build
 ARG TARGETOS
 ARG TARGETARCH
 ARG PROJECT
-RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build GOOS=linux GOARCH=amd64 go build -o server ${PROJECT}
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    GOOS=linux GOARCH=amd64 go build -o server ${PROJECT}
 
 FROM scratch AS release
 

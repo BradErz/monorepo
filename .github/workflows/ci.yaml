@@ -69,6 +69,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+      # used for keyless docker image signing 
+      id-token: write
 
     strategy:
       fail-fast: true
