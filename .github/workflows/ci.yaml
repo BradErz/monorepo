@@ -69,8 +69,8 @@ jobs:
     permissions:
       contents: read
       packages: write
-      # used for keyless docker image signing 
-      id-token: write
+      id-token: write # used for keyless docker image signing 
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
 
     strategy:
       fail-fast: true
