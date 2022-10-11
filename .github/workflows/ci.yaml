@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   contents: read
@@ -15,6 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # running tests against our application 
   test:
     runs-on: ubuntu-latest
     steps:
@@ -23,14 +24,15 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           cache: true
-          go-version-file: 'go.mod'
-          
+          go-version-file: "go.mod"
+
       - name: start test dependencies
         run: docker compose up -d mongo
 
       - name: go test
         run: go test ./... -race
 
+  # running golangci-lint agains the codebase
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -39,15 +41,22 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           cache: true
-          go-version-file: 'go.mod'
+          go-version-file: "go.mod"
 
       - uses: golangci/golangci-lint-action@v3
         with:
           args: --out-${NO_FUTURE}format colored-line-number --verbose
           only-new-issues: true
+          # these caches are hadled by the setup-go action
+          # we are still using the caching of this action for the golangci-lint specific caches
+          skip-pkg-cache: true
+          skip-build-cache: true
 
+  # validating all the protos we have are valid.
   validate-protos:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v3
 
@@ -61,5 +70,22 @@ jobs:
 
       - uses: bufbuild/buf-breaking-action@v1
         with:
-          input: 'proto'
-          against: 'https://github.com/braderz/monorepo.git#branch=main,ref=HEAD~1,subdir=proto'
+          input: "proto"
+          against: "https://github.com/braderz/monorepo.git#branch=main,ref=HEAD~1,subdir=proto"
+
+  # Build, push, scan and sign the docker images for each service
+  build-and-push:
+    permissions:
+      contents: read
+      packages: write
+      id-token: write # used for keyless docker image signing
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+    strategy:
+      fail-fast: true
+      matrix:
+        services:
+          - products
+          - reviews
+    uses: ./.github/workflows/docker-build-push.yaml
+    with:
+      service: ${{ matrix.services }}
