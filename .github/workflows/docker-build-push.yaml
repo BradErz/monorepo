@@ -72,12 +72,18 @@ jobs:
         uses: aquasecurity/trivy-action@0.7.1
         with:
           image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
-          format: 'template'
-          template: '@/contrib/sarif.tpl'
+          format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v2
         with:
-          sarif_file: 'trivy-results.sarif'        
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Trivy scan attestation
+        env:
+          COSIGN_EXPERIMENTAL: "true"
+        run: |
+          trivy image --format cosign-vuln -o vuln.json fromJSON(steps.meta.outputs.json).tags[0]
+          cosign attest --type vuln --predicate vuln.json fromJSON(steps.meta.outputs.json).tags[0]
