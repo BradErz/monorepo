@@ -27,7 +27,9 @@ jobs:
           go-version-file: "go.mod"
 
       - name: start test dependencies
-        run: docker compose up -d mongo
+        run: |
+          docker compose up -d mongo
+          docker compose up -d redis
 
       - name: go test
         run: go test ./... -race

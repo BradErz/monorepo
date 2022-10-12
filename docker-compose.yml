@@ -77,7 +77,7 @@ services:
     logging: *default-logging
 
   mongo:
-    image: mongo:5
+    image: mongo:6
     ports:
       - "27017:27017"
     networks:
@@ -85,6 +85,15 @@ services:
     labels:
       namespace: app      
     command: --quiet --logpath /dev/null
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - monorepo_net
+    labels:
+      namespace: app
 
   grafana:
     image: grafana/grafana:9.1.7
