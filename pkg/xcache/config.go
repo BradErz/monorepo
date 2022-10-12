@@ -4,6 +4,7 @@ import "github.com/kelseyhightower/envconfig"
 
 type Config struct {
 	RedisAddrs []string `envconfig:"REDIS_ADDRS"`
+	Namespace  string   `envconfig:"NAMESPACE"`
 }
 
 type Option func(config *Config)
@@ -14,9 +15,16 @@ func WithAddr(addrs ...string) Option {
 	}
 }
 
+func WithNamespace(namespace string) Option {
+	return func(config *Config) {
+		config.Namespace = namespace
+	}
+}
+
 func defaultConfig() (*Config, error) {
 	conf := &Config{
 		RedisAddrs: []string{"localhost:6379"},
+		Namespace:  "",
 	}
 	return conf, envconfig.Process("", conf)
 }

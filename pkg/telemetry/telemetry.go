@@ -69,6 +69,8 @@ func Init(lgr logr.Logger, opts ...Option) (trace.Tracer, func(ctx context.Conte
 		prometheusMetrics()
 	}
 
+	// TODO: this doesnt work and causes containers to hang if they
+	// couldnt connect to the endpoint for jaeger
 	stop := func(ctx context.Context) {
 		lgr.Info("shutting down telemetry")
 		_ = tp.Shutdown(ctx)

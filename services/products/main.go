@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/BradErz/monorepo/pkg/xcache"
 	"github.com/BradErz/monorepo/pkg/xconnect"
 	"github.com/BradErz/monorepo/pkg/xlogger"
 	"github.com/bufbuild/connect-go"
@@ -19,6 +20,7 @@ import (
 
 	"github.com/BradErz/monorepo/pkg/xmongo"
 
+	"github.com/BradErz/monorepo/services/cache"
 	"github.com/BradErz/monorepo/services/products/storage"
 
 	"github.com/BradErz/monorepo/services/products/service"
@@ -49,10 +51,16 @@ func app() error {
 	if err != nil {
 		return fmt.Errorf("failed to create mongo client: %w", err)
 	}
+	cacheClient, err := xcache.New(xcache.WithNamespace("products-service"))
+	if err != nil {
+		return fmt.Errorf("failed to create cache client: %w", err)
+	}
 
-	store := storage.NewProducts(db.Database)
+	svc := service.NewProducts(lgr,
+		storage.NewProducts(db.Database),
+		cache.NewProducts(cacheClient),
+	)
 
-	svc := service.NewProducts(store)
 	productsSrv := web.New(lgr, svc)
 
 	mux := http.NewServeMux()
