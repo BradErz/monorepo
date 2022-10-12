@@ -1,6 +1,7 @@
 package xerrors
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -47,4 +48,12 @@ func (e *Error) Unwrap() error {
 
 func NotValidObjectID(id string) error {
 	return Newf(CodeInvalidArgument, "%s is not a valid object id", id)
+}
+
+func IsNotFound(err error) bool {
+	myError := &Error{}
+	if !errors.As(err, &myError) {
+		return false
+	}
+	return myError.Code == CodeNotFound
 }

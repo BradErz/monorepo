@@ -26,11 +26,14 @@ jobs:
           cache: true
           go-version-file: "go.mod"
 
-      - name: start test dependencies
-        run: docker compose up -d mongo
+      - run: go mod download
 
-      - name: go test
-        run: go test ./... -race
+      - name: start test dependencies
+        run: |
+          docker compose up -d mongo
+          docker compose up -d redis
+
+      - run: go test ./... -race
 
   # running golangci-lint agains the codebase
   lint:
@@ -42,6 +45,8 @@ jobs:
         with:
           cache: true
           go-version-file: "go.mod"
+
+      - run: go mod download
 
       - uses: golangci/golangci-lint-action@v3
         with:
