@@ -11,8 +11,8 @@ import (
 
 	"github.com/BradErz/monorepo/services/products/models"
 
-	productsv1 "github.com/BradErz/monorepo/gen/go/products/v1"
-	"github.com/BradErz/monorepo/gen/go/products/v1/productsv1connect"
+	productsv1 "go.buf.build/bufbuild/connect-go/braderz/monorepo/products/v1"
+	productsv1connect "go.buf.build/bufbuild/connect-go/braderz/monorepo/products/v1/productsv1connect"
 )
 
 type Server struct {

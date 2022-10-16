@@ -8,11 +8,12 @@ require (
 	github.com/go-logr/zapr v1.2.3
 	github.com/go-redis/redis/extra/redisotel/v9 v9.0.0-beta.2
 	github.com/go-redis/redis/v9 v9.0.0-beta.3
-	github.com/golang/mock v1.4.4
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/prometheus/client_golang v1.13.0
 	github.com/stretchr/testify v1.8.0
+	go.buf.build/bufbuild/connect-go/braderz/monorepo v1.9.1
+	go.buf.build/protocolbuffers/go/braderz/monorepo v1.3.1
 	go.mongodb.org/mongo-driver v1.10.3
 	go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo v0.36.1
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.36.1

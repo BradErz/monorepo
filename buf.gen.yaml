@@ -15,8 +15,3 @@ plugins:
   - name: connect-go
     out: gen/go
     opt: paths=source_relative
-  # - name: validate
-  #   out: gen/go
-  #   opt:
-  #     - paths=source_relative
-  #     - lang=go

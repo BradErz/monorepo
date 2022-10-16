@@ -10,8 +10,8 @@ import (
 
 	"github.com/BradErz/monorepo/services/reviews/models"
 
-	reviewsv1 "github.com/BradErz/monorepo/gen/go/reviews/v1"
-	"github.com/BradErz/monorepo/gen/go/reviews/v1/reviewsv1connect"
+	reviewsv1connect "go.buf.build/bufbuild/connect-go/braderz/monorepo/reviews/v1/reviewsv1connect"
+	reviewsv1 "go.buf.build/bufbuild/connect-go/braderz/monorepo/reviews/v1"
 )
 
 type Server struct {

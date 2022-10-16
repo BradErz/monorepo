@@ -15,8 +15,8 @@ import (
 	"github.com/BradErz/monorepo/pkg/xlogger"
 	"github.com/bufbuild/connect-go"
 
-	"github.com/BradErz/monorepo/gen/go/products/v1/productsv1connect"
 	"github.com/BradErz/monorepo/pkg/telemetry"
+	productsv1connect "go.buf.build/bufbuild/connect-go/braderz/monorepo/products/v1/productsv1connect"
 
 	"github.com/BradErz/monorepo/pkg/xmongo"
 

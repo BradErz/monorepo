@@ -11,11 +11,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/BradErz/monorepo/gen/go/products/v1/productsv1connect"
-	"github.com/BradErz/monorepo/gen/go/reviews/v1/reviewsv1connect"
 	"github.com/BradErz/monorepo/pkg/xconnect"
 	"github.com/BradErz/monorepo/pkg/xlogger"
 	"github.com/bufbuild/connect-go"
+	productsv1connect "go.buf.build/bufbuild/connect-go/braderz/monorepo/products/v1/productsv1connect"
+	reviewsv1connect "go.buf.build/bufbuild/connect-go/braderz/monorepo/reviews/v1/reviewsv1connect"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/BradErz/monorepo/pkg/telemetry"

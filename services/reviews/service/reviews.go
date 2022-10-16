@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	productsv1 "github.com/BradErz/monorepo/gen/go/products/v1"
-	"github.com/BradErz/monorepo/gen/go/products/v1/productsv1connect"
 	"github.com/BradErz/monorepo/pkg/xerrors"
 	"github.com/BradErz/monorepo/services/reviews/models"
 	"github.com/bufbuild/connect-go"
+	productsv1 "go.buf.build/bufbuild/connect-go/braderz/monorepo/products/v1"
+	productsv1connect "go.buf.build/bufbuild/connect-go/braderz/monorepo/products/v1/productsv1connect"
 )
-
 
 type Reviews struct {
 	store            Storage

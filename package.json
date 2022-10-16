@@ -4,8 +4,7 @@
   "private": true,
   "workspaces": [
     "apps/*",
-    "packages/*",
-    "gen/ts/*"
+    "packages/*"
   ],
   "scripts": {
     "build": "turbo run build",
@@ -25,6 +24,7 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
+    "@buf/bufbuild_connect-web_braderz_monorepo": "^1.7.1",
     "@bufbuild/connect-web": "^0.2.1",
     "@bufbuild/protobuf": "^0.1.1"
   },

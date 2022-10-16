@@ -2,11 +2,11 @@ import type { NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
 import styles from "../styles/Home.module.css";
-import { ReviewsService } from "../../../gen/ts/reviews/v1/reviews_connectweb.js";
+import { ReviewsService } from "@buf/bufbuild_connect-web_braderz_monorepo/reviews/v1/reviews_connectweb";
 import {
   ListReviewsRequest,
   ListReviewsResponse,
-} from "../../../gen/ts/reviews/v1/reviews_pb.js";
+} from "@buf/bufbuild_connect-web_braderz_monorepo/reviews/v1/reviews_pb";
 import {
   createPromiseClient,
   createConnectTransport,
