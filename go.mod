@@ -8,6 +8,7 @@ require (
 	github.com/go-logr/zapr v1.2.3
 	github.com/go-redis/redis/extra/redisotel/v9 v9.0.0-beta.2
 	github.com/go-redis/redis/v9 v9.0.0-beta.3
+	github.com/golang/mock v1.4.4
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/prometheus/client_golang v1.13.0

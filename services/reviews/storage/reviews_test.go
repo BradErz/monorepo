@@ -32,9 +32,6 @@ func TestListReviews(t *testing.T) {
 
 			resp, err := store.ListReviews(context.Background(), req)
 			require.NoError(t, err)
-			for i, v := range resp.Reviews {
-				t.Logf("%d: %+v", i, v)
-			}
 
 			nextPageToken = resp.NextPageToken
 			if resp.NextPageToken == "" {

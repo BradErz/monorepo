@@ -35,8 +35,7 @@ func LogrInterceptor(lgr logr.Logger) connect.UnaryInterceptorFunc {
 			}
 
 			if err != nil {
-				myError := &xerrors.Error{}
-				if errors.As(err, &myError) {
+				if myError := new(xerrors.Error); errors.As(err, &myError) {
 					fields = append(fields,
 						"error_details", myError,
 					)

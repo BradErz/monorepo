@@ -13,6 +13,7 @@ services:
       - TELEMETRY_ENABLED=true
       - TELEMETRY_JAEGER_COLLECTOR_ENDPOINT=http://jaeger:14268/api/traces
       - REDIS_ADDRS=redis:6379
+      - API_PRODUCTS_V1_URL=http://products:50051
     ports:
       - "8001:50051"
     volumes:

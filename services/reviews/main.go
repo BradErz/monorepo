@@ -6,14 +6,17 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/BradErz/monorepo/gen/go/products/v1/productsv1connect"
 	"github.com/BradErz/monorepo/gen/go/reviews/v1/reviewsv1connect"
 	"github.com/BradErz/monorepo/pkg/xconnect"
 	"github.com/BradErz/monorepo/pkg/xlogger"
 	"github.com/bufbuild/connect-go"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/BradErz/monorepo/pkg/telemetry"
 
@@ -50,15 +53,28 @@ func app() error {
 		return fmt.Errorf("failed to create mongoclient: %w", err)
 	}
 
+	productsV1Client := productsv1connect.NewProductsServiceClient(
+		&http.Client{
+			Timeout: time.Second,
+			Transport: otelhttp.NewTransport(http.DefaultTransport,
+				// operation is always sent as an empty sting...
+				otelhttp.WithSpanNameFormatter(func(operation string, r *http.Request) string {
+					return "http.client " + r.URL.Path
+				}),
+			),
+		},
+		os.Getenv("API_PRODUCTS_V1_URL"),
+	)
+
 	store := storage.NewReviews(db.Database)
 
-	svc := service.NewReviews(store)
+	svc := service.NewReviews(store, productsV1Client)
 	reviewsSrv := web.New(lgr, svc)
 
 	mux := http.NewServeMux()
 	interceptors := connect.WithInterceptors(
-		xconnect.LogrInterceptor(lgr),
 		xconnect.ErrorsInterceptor(),
+		xconnect.LogrInterceptor(lgr),
 	)
 	mux.Handle(reviewsv1connect.NewReviewsServiceHandler(reviewsSrv, interceptors))
 
