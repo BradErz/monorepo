@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/propagators/b3"
 	"go.opentelemetry.io/otel/metric/global"
@@ -80,22 +79,20 @@ func Init(lgr logr.Logger, opts ...Option) (trace.Tracer, func(ctx context.Conte
 	return tp.Tracer(""), stop, nil
 }
 
-func prometheusMetrics() {
-	exporter := otelprom.New()
+func prometheusMetrics() error {
+	exporter, err := otelprom.New()
+	if err != nil {
+		return err
+	}
 	provider := metric.NewMeterProvider(metric.WithReader(exporter))
 	global.SetMeterProvider(provider)
-	go serveMetrics(exporter.Collector)
+	go serveMetrics()
+	return nil
 }
 
-func serveMetrics(collector prometheus.Collector) {
-	registry := prometheus.NewRegistry()
-	if err := registry.Register(collector); err != nil {
-		fmt.Printf("error registering collector: %v", err)
-		return
-	}
-
+func serveMetrics() {
 	metricsMux := http.NewServeMux()
-	metricsMux.Handle("/metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
+	metricsMux.Handle("/metrics", promhttp.Handler())
 
 	server := http.Server{
 		Addr:         ":2222",
