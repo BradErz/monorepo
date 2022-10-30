@@ -22,7 +22,12 @@ func New(opts ...Option) (*Client, error) {
 		Addrs: conf.RedisAddrs,
 	})
 
-	rdb.AddHook(redisotel.NewTracingHook())
+	if err := redisotel.InstrumentTracing(rdb); err != nil {
+		return nil, fmt.Errorf("failed to add tracing to redis client: %w", err)
+	}
+	if err := redisotel.InstrumentMetrics(rdb); err != nil {
+		return nil, fmt.Errorf("failed to add metrics to redis client: %w", err)
+	}
 
 	return &Client{
 		Client: rdb,
