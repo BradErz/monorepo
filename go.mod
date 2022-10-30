@@ -3,7 +3,7 @@ module github.com/BradErz/monorepo
 go 1.19
 
 require (
-	github.com/bufbuild/connect-go v1.0.0
+	github.com/bufbuild/connect-go v1.1.0
 	github.com/go-logr/logr v1.2.3
 	github.com/go-logr/zapr v1.2.3
 	github.com/go-redis/redis/extra/redisotel/v9 v9.0.0-rc.1
