@@ -50,7 +50,6 @@ jobs:
 
       - uses: golangci/golangci-lint-action@v3
         with:
-          args: --out-${NO_FUTURE}format colored-line-number --verbose
           only-new-issues: true
           # these caches are hadled by the setup-go action
           # we are still using the caching of this action for the golangci-lint specific caches

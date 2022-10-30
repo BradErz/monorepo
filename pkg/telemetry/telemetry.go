@@ -65,7 +65,9 @@ func Init(lgr logr.Logger, opts ...Option) (trace.Tracer, func(ctx context.Conte
 	))
 	if conf.MetricsEnabled {
 		lgr.Info("serving prometheus metrics")
-		prometheusMetrics()
+		if err := prometheusMetrics(); err != nil {
+			return nil, nil, fmt.Errorf("failed to setup prometheus metrics")
+		}
 	}
 
 	// TODO: this doesnt work and causes containers to hang if they
