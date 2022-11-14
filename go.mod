@@ -10,7 +10,7 @@ require (
 	github.com/go-redis/redis/v9 v9.0.0-rc.1
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/prometheus/client_golang v1.13.0
+	github.com/prometheus/client_golang v1.14.0
 	github.com/stretchr/testify v1.8.1
 	go.buf.build/bufbuild/connect-go/braderz/monorepo v1.10.1
 	go.mongodb.org/mongo-driver v1.10.3
@@ -31,6 +31,7 @@ require (
 )
 
 require (
+	cloud.google.com/go/compute/metadata v0.2.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
