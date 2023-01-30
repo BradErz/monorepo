@@ -49,7 +49,7 @@ jobs:
 
       # Build and push the docker image to github packages. Using github actions cache for layers.
       - name: Build and push Docker image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         id: build-and-push
         with:
           context: .
