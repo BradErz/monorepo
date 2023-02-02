@@ -16,6 +16,7 @@ services:
       - API_PRODUCTS_V1_URL=http://products:50051
     ports:
       - "8001:50051"
+      - 3000:10000
     volumes:
       - ./:/usr/src/app
       - go-modules:/go/pkg/mod

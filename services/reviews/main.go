@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"os/signal"
 	"syscall"
@@ -90,6 +91,20 @@ func app() error {
 		}
 	}()
 	lgr.Info("application started", "addr", srv.Addr())
+
+	go func() {
+		debugMux := http.NewServeMux()
+		debugMux.HandleFunc("/debug/pprof/", pprof.Index)
+		debugMux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+		debugMux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+		debugMux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+		debugMux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+		addr := "0.0.0.0:10000"
+		lgr.Info("starting debug mux on", "addr", addr)
+		if err := http.ListenAndServe(addr, debugMux); err != nil {
+			panic(err)
+		}
+	}()
 
 	// wait for shutdown
 	<-ctx.Done()
