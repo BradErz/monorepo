@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reviews
+spec:
+  selector:
+    matchLabels:
+      app: reviews
+  template:
+    metadata:
+      labels:
+        app: reviews
+    spec:
+      containers:
+      - name: reviews
+        image: ""
+        resources:
+          limits:
+            memory: "50Mi"
+            cpu: "100m"
+        ports:
+        - containerPort: 50051
+        - containerPort: 10000
