@@ -3,7 +3,7 @@ module github.com/BradErz/monorepo
 go 1.19
 
 require (
-	github.com/bufbuild/connect-go v1.1.0
+	github.com/bufbuild/connect-go v1.5.1
 	github.com/go-logr/logr v1.2.3
 	github.com/go-logr/zapr v1.2.3
 	github.com/go-redis/redis/extra/redisotel/v9 v9.0.0-rc.1
@@ -31,6 +31,7 @@ require (
 )
 
 require (
+	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
