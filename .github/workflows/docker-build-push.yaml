@@ -38,7 +38,7 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Install cosign
-        uses: sigstore/cosign-installer@v2
+        uses: sigstore/cosign-installer@v3
 
       # Simple tagging policy for now
       - name: Extract metadata (tags, labels) for Docker
